@@ -17,7 +17,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.firebase.client.Firebase;
 import com.malinskiy.superrecyclerview.OnMoreListener;
 import com.malinskiy.superrecyclerview.SuperRecyclerView;
 import com.nasahapps.awkwardratings.R;
@@ -25,7 +24,6 @@ import com.nasahapps.awkwardratings.Utils;
 import com.nasahapps.awkwardratings.model.Movie;
 import com.nasahapps.awkwardratings.model.MovieRating;
 import com.nasahapps.awkwardratings.service.NetworkHelper;
-import com.nasahapps.awkwardratings.service.response.PopularMovieResponse;
 import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseObject;
@@ -39,9 +37,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
-
-import de.greenrobot.event.EventBus;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -64,7 +59,6 @@ public class MainActivity extends ActionBarActivity {
         private SuperRecyclerView mRecyclerView;
         private List<ParseObject> mMovies = new ArrayList<>(), mMovieRatings;
         private Map<String, ParseObject> mMovieRatingMap = new HashMap<>();
-        private Firebase mFirebase;
 
         private List<Movie> movies = new ArrayList<>();
         private int pageCount = 1;
@@ -73,17 +67,6 @@ public class MainActivity extends ActionBarActivity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View v = inflater.inflate(R.layout.fragment_main, container, false);
-
-            Scanner s = new Scanner(getResources().openRawResource(R.raw.firebase));
-            try {
-                List<String> keys = new ArrayList<>();
-                while (s.hasNext()) {
-                    keys.add(s.next());
-                }
-
-            } finally {
-                s.close();
-            }
 
             mRecyclerView = (SuperRecyclerView) v.findViewById(R.id.list);
             // Lay out in a linear fashion (ala ListView)
@@ -108,7 +91,7 @@ public class MainActivity extends ActionBarActivity {
             }, 10);
 
             // Used for getting dummy data, ignore
-            EventBus.getDefault().register(this);
+            //EventBus.getDefault().register(this);
 
             // Make a Map out of our user's movie ratings, if any
             /*
@@ -144,9 +127,16 @@ public class MainActivity extends ActionBarActivity {
                 }
             }
             */
+            mMovieRatings = ParseUser.getCurrentUser().getList("movieRatings");
+            if (mMovieRatings != null) {
+                for (ParseObject po : mMovieRatings) {
+                    mMovieRatingMap.put(po.getObjectId(), po);
+                }
+            } else {
+                mMovieRatings = new ArrayList<>();
+            }
 
-            //getMovies();
-            createDummyData();
+            getMovies();
 
             return v;
         }
@@ -157,6 +147,7 @@ public class MainActivity extends ActionBarActivity {
          * only used one time to make dummy data
          */
 
+        /*
         @Override
         public void onStart() {
             super.onStart();
@@ -202,6 +193,7 @@ public class MainActivity extends ActionBarActivity {
                 }
             }
         }
+        */
 
         public void getMovies() {
             // Query our db for the movies, 100 at a time (default)

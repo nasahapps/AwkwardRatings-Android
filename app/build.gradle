@@ -27,6 +27,8 @@ dependencies {
     compile 'com.android.support:palette-v7:21.0.3'
     // Parse
     compile 'com.parse.bolts:bolts-android:1.+'
+    // Firebase
+    compile 'com.firebase:firebase-client-android:2.2.1+'
     // Super RecyclerView
     compile 'com.malinskiy:superrecyclerview:1.1.0'
     // Picasso (Square)

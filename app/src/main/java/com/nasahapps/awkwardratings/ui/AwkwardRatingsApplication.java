@@ -2,8 +2,8 @@ package com.nasahapps.awkwardratings.ui;
 
 import android.app.Application;
 
+import com.firebase.client.Firebase;
 import com.nasahapps.awkwardratings.R;
-import com.parse.Parse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +24,7 @@ public class AwkwardRatingsApplication extends Application {
             while (s.hasNext()) {
                 parseKeys.add(s.next());
             }
-            Parse.initialize(this, parseKeys.get(0), parseKeys.get(1));
+            Firebase.setAndroidContext(this);
         } finally {
             s.close();
         }

@@ -1,31 +1,49 @@
 package com.nasahapps.awkwardratings.model;
 
-import com.parse.ParseObject;
-
 /**
  * Created by Hakeem on 2/28/15.
  */
 public class MovieRating {
 
-    private ParseObject movie;
+    private Movie movie;
+    private String movieId;
     private boolean rated, awkward;
 
-    public MovieRating(ParseObject movie, boolean rated) {
+    public MovieRating(String id, boolean rated) {
+        this.movieId = id;
+        this.rated = rated;
+    }
+
+    public MovieRating(String id, boolean rated, boolean awkward) {
+        this.movieId = id;
+        this.rated = rated;
+        this.awkward = awkward;
+    }
+
+    public MovieRating(Movie movie, boolean rated) {
         this.movie = movie;
         this.rated = rated;
     }
 
-    public MovieRating(ParseObject movie, boolean rated, boolean awkward) {
+    public MovieRating(Movie movie, boolean rated, boolean awkward) {
         this.movie = movie;
         this.rated = rated;
         this.awkward = awkward;
     }
 
-    public ParseObject getMovie() {
+    public String getMovieId() {
+        return movieId;
+    }
+
+    public void setMovieId(String id) {
+        this.movieId = id;
+    }
+
+    public Movie getMovie() {
         return movie;
     }
 
-    public void setMovie(ParseObject movie) {
+    public void setMovie(Movie movie) {
         this.movie = movie;
     }
 

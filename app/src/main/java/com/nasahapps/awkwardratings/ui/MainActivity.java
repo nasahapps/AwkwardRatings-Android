@@ -17,6 +17,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
 import com.malinskiy.superrecyclerview.OnMoreListener;
 import com.malinskiy.superrecyclerview.SuperRecyclerView;
 import com.nasahapps.awkwardratings.R;
@@ -217,6 +218,16 @@ public class MainActivity extends ActionBarActivity {
                             // Add our results to what we already have
                             mMovies.addAll(parseObjects);
                             mRecyclerView.getAdapter().notifyDataSetChanged();
+
+                            List<MovieRating> ratings = new ArrayList<>();
+                            MovieRating rating1 = new MovieRating(mMovies.get(0).getObjectId(), true, true);
+                            ratings.add(rating1);
+                            MovieRating rating2 = new MovieRating(mMovies.get(1).getObjectId(), true, false);
+                            ratings.add(rating2);
+                            MovieRating rating3 = new MovieRating(mMovies.get(2).getObjectId(), true, true);
+                            ratings.add(rating3);
+                            ParseUser.getCurrentUser().put("movieRatings", new Gson().toJson(ratings));
+                            ParseUser.getCurrentUser().saveInBackground();
                         }
                     } else {
                         Utils.showError(getActivity(), TAG, "Error querying movies", e, e.getLocalizedMessage());
@@ -483,6 +494,7 @@ public class MainActivity extends ActionBarActivity {
                 });
             }
 
+            /*
             public void setVoteClickListener(final boolean awkward, View v, final View otherButton) {
                 v.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -555,6 +567,7 @@ public class MainActivity extends ActionBarActivity {
                     }
                 });
             }
+            */
 
             public void addVote(ParseObject movie, boolean awkward) {
                 String key;

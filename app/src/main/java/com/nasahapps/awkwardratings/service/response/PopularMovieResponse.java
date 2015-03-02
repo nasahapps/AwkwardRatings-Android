@@ -6,6 +6,8 @@ import java.util.List;
 
 /**
  * Created by Hakeem on 2/28/15.
+ *
+ * Automatically deserialized with GSON by Retrofit
  */
 public class PopularMovieResponse {
 

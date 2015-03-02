@@ -2,6 +2,8 @@ package com.nasahapps.awkwardratings.model;
 
 /**
  * Created by Hakeem on 2/28/15.
+ *
+ * Automatically deserialized with GSON by Retrofit
  */
 public class Movie {
 

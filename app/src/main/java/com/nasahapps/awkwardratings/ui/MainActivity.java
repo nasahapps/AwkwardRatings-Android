@@ -33,6 +33,9 @@ import java.util.List;
 
 import de.greenrobot.event.EventBus;
 
+/**
+ * Created by Hakeem on 2/28/15
+ */
 
 public class MainActivity extends ActionBarActivity {
 
@@ -54,7 +57,8 @@ public class MainActivity extends ActionBarActivity {
         private SuperRecyclerView mRecyclerView;
         private List<Movie> mMovies = new ArrayList<>();
         private Toolbar mToolbar;
-        private int pageCount = 1;
+        // For keeping track of which page of API results we're on
+        private int currentPage = 1;
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -122,13 +126,13 @@ public class MainActivity extends ActionBarActivity {
         }
 
         public void getMovies() {
-            NetworkHelper.getInstance(getActivity()).getPopularMovies(pageCount);
+            NetworkHelper.getInstance(getActivity()).getPopularMovies(currentPage);
         }
 
         public void onEvent(PopularMovieResponse resp) {
             if (resp != null) {
                 mMovies.addAll(resp.getResults());
-                pageCount++;
+                currentPage++;
                 if (mRecyclerView.getAdapter() == null) {
                     // If just creating our list, create it with a new adapter
                     MovieAdapter adapter = new MovieAdapter(mMovies);
@@ -162,8 +166,10 @@ public class MainActivity extends ActionBarActivity {
                 // Reset background to black when scrolling down
                 holder.itemView.setBackgroundColor(Color.BLACK);
 
+                // Set movie title
                 holder.title.setText(movie.getTitle());
 
+                // If movie had a poster, get the picture and set it
                 if (movie.getPosterPath() != null) {
                     final View background = holder.itemView;
                     final ImageView iv = holder.poster;
@@ -172,6 +178,7 @@ public class MainActivity extends ActionBarActivity {
                     Picasso.with(getActivity()).load(uri).into(holder.poster, new Callback() {
                         @Override
                         public void onSuccess() {
+                            // Color the background after getting the picture
                             Palette.generateAsync(Utils.getImageViewBitmap(iv), new Palette.PaletteAsyncListener() {
                                 @Override
                                 public void onGenerated(Palette p) {

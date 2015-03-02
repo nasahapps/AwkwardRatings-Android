@@ -5,6 +5,9 @@ import android.support.v7.widget.RecyclerView;
 
 /**
  * Created by Hakeem on 3/1/15.
+ *
+ * Helper class for allowing the top Toolbar to hide when scrolling down and reappear when
+ * scrolling back up.
  */
 public abstract class HidingScrollListener extends RecyclerView.OnScrollListener {
 

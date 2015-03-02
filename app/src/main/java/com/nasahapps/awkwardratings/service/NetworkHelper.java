@@ -19,6 +19,8 @@ import retrofit.http.Query;
 
 /**
  * Created by Hakeem on 2/28/15.
+ *
+ * Network helper class for any REST APIs used
  */
 public class NetworkHelper {
 

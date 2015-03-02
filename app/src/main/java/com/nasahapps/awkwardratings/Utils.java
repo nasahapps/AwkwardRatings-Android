@@ -30,6 +30,8 @@ import java.util.List;
 
 /**
  * Created by Hakeem on 2/28/15.
+ *
+ * Just convenience methods I use in all my apps, gathered into one collective helper class.
  */
 public class Utils {
 

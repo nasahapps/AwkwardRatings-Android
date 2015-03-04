@@ -18,22 +18,22 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.malinskiy.superrecyclerview.OnMoreListener;
 import com.malinskiy.superrecyclerview.SuperRecyclerView;
+import com.nasahapps.awkwardratings.PreferencesHelper;
 import com.nasahapps.awkwardratings.R;
 import com.nasahapps.awkwardratings.Utils;
-import com.nasahapps.awkwardratings.model.Movie;
 import com.nasahapps.awkwardratings.model.MovieRating;
 import com.nasahapps.awkwardratings.service.NetworkHelper;
 import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
-import com.parse.ParseUser;
-import com.parse.SaveCallback;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -58,16 +58,14 @@ public class MainActivity extends ActionBarActivity {
     public static class MainFragment extends Fragment {
 
         private SuperRecyclerView mRecyclerView;
-        private List<ParseObject> mMovies = new ArrayList<>(), mMovieRatings;
-        private Map<String, ParseObject> mMovieRatingMap = new HashMap<>();
-
-        private List<Movie> movies = new ArrayList<>();
-        private int pageCount = 1;
+        private List<ParseObject> mMovies = new ArrayList<>();
+        private Map<Number, MovieRating> mMovieRatings = new HashMap<>();
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View v = inflater.inflate(R.layout.fragment_main, container, false);
+            setRetainInstance(true);
 
             mRecyclerView = (SuperRecyclerView) v.findViewById(R.id.list);
             // Lay out in a linear fashion (ala ListView)
@@ -90,119 +88,38 @@ public class MainActivity extends ActionBarActivity {
                     getMovies();
                 }
             }, 10);
-
-            // Used for getting dummy data, ignore
-            //EventBus.getDefault().register(this);
-
-            // Make a Map out of our user's movie ratings, if any
-            /*
-            if (ParseUser.getCurrentUser() == null) {
-                ParseUser user = new ParseUser();
-                user.setUsername(UUID.randomUUID().toString());
-                user.setPassword("");
-                user.signUpInBackground(new SignUpCallback() {
-                    @Override
-                    public void done(ParseException e) {
-                        if (e != null) {
-                            Log.e(TAG, "Error signing up user", e);
-                        } else {
-                            mMovieRatings = ParseUser.getCurrentUser().getList("movieRatings");
-                            if (mMovieRatings != null) {
-                                for (ParseObject po : mMovieRatings) {
-                                    mMovieRatingMap.put(po.getObjectId(), po);
-                                }
-                            } else {
-                                mMovieRatings = new ArrayList<>();
-                            }
-                        }
-                    }
-                });
-            } else {
-                mMovieRatings = ParseUser.getCurrentUser().getList("movieRatings");
-                if (mMovieRatings != null) {
-                    for (ParseObject po : mMovieRatings) {
-                        mMovieRatingMap.put(po.getObjectId(), po);
-                    }
-                } else {
-                    mMovieRatings = new ArrayList<>();
-                }
-            }
-            */
-            mMovieRatings = ParseUser.getCurrentUser().getList("movieRatings");
-            if (mMovieRatings != null) {
-                for (ParseObject po : mMovieRatings) {
-                    mMovieRatingMap.put(po.getObjectId(), po);
-                }
-            } else {
-                mMovieRatings = new ArrayList<>();
+            // Also, set the adapter if we already have movies (used if device was rotated)
+            if (savedInstanceState != null) {
+                MovieAdapter adapter = new MovieAdapter(mMovies);
+                mRecyclerView.setAdapter(adapter);
             }
 
-            getMovies();
+            // Only get movies if this is the first time loading
+            if (savedInstanceState == null) {
+                // Also load user's movie ratings from prefs
+                String json = PreferencesHelper.getInstance(getActivity())
+                        .getString(PreferencesHelper.KEY_MOVIE_RATINGS, null);
+                if (json != null) {
+                    Type type = new TypeToken<Map<Integer, MovieRating>>() {
+                    }.getType();
+                    mMovieRatings = new Gson().fromJson(json, type);
+                }
+
+                getMovies();
+            }
 
             return v;
         }
 
-        /**
-         * Registering/unregistering for listening for EventBus was needed for creating dummy data
-         * gathered from themoviedb.com. createDummyData() and onEvent() are not used, and were
-         * only used one time to make dummy data
-         */
-
-        /*
-        @Override
-        public void onStart() {
-            super.onStart();
-            if (!EventBus.getDefault().isRegistered(this))
-                EventBus.getDefault().register(this);
-        }
-
-        @Override
-        public void onStop() {
-            super.onStop();
-            if (EventBus.getDefault().isRegistered(this))
-                EventBus.getDefault().unregister(this);
-        }
-
-        public void createDummyData() {
-            NetworkHelper.getInstance(getActivity()).getPopularMovies(pageCount);
-        }
-
-        public void onEvent(PopularMovieResponse resp) {
-            if (resp != null) {
-                movies.addAll(resp.getResults());
-                pageCount++;
-                if (pageCount < 20) {
-                    NetworkHelper.getInstance(getActivity()).getPopularMovies(pageCount);
-                } else {
-                    List<ParseObject> objs = new ArrayList<>();
-                    for (Movie m : movies) {
-                        ParseObject obj = new ParseObject("Movie");
-                        obj.put("adult", m.isAdult());
-                        if (m.getBackdropPath() != null)
-                            obj.put("backdropPath", m.getBackdropPath());
-                        if (m.getPosterPath() != null)
-                            obj.put("posterPath", m.getPosterPath());
-                        if (m.getOriginalTitle() != null)
-                            obj.put("originalTitle", m.getOriginalTitle());
-                        if (m.getTitle() != null)
-                            obj.put("title", m.getTitle());
-                        if (m.getReleaseDate() != null)
-                            obj.put("releaseDate", m.getReleaseDate());
-                        objs.add(obj);
-                    }
-                    ParseObject.saveAllInBackground(objs);
-                }
-            }
-        }
-        */
-
         public void getMovies() {
-            // Query our db for the movies, 100 at a time (default)
+            // Query our db for the movies
             ParseQuery<ParseObject> query = ParseQuery.getQuery("Movie");
             // Ordered by most recently updated
             query.orderByDescending("updatedAt");
             // For pagination
             query.setSkip(mMovies.size());
+            // Get 1000 at a time
+            query.setLimit(1000);
             query.findInBackground(new FindCallback<ParseObject>() {
                 @Override
                 public void done(List<ParseObject> parseObjects, ParseException e) {
@@ -218,16 +135,6 @@ public class MainActivity extends ActionBarActivity {
                             // Add our results to what we already have
                             mMovies.addAll(parseObjects);
                             mRecyclerView.getAdapter().notifyDataSetChanged();
-
-                            List<MovieRating> ratings = new ArrayList<>();
-                            MovieRating rating1 = new MovieRating(mMovies.get(0).getObjectId(), true, true);
-                            ratings.add(rating1);
-                            MovieRating rating2 = new MovieRating(mMovies.get(1).getObjectId(), true, false);
-                            ratings.add(rating2);
-                            MovieRating rating3 = new MovieRating(mMovies.get(2).getObjectId(), true, true);
-                            ratings.add(rating3);
-                            ParseUser.getCurrentUser().put("movieRatings", new Gson().toJson(ratings));
-                            ParseUser.getCurrentUser().saveInBackground();
                         }
                     } else {
                         Utils.showError(getActivity(), TAG, "Error querying movies", e, e.getLocalizedMessage());
@@ -256,42 +163,15 @@ public class MainActivity extends ActionBarActivity {
                 // Reset background to black when scrolling down
                 holder.itemView.setBackgroundColor(Color.BLACK);
                 // And set the button bgs depending on whether user voted or not for this movie
-                /*
-                List<ParseObject> movieRatings = ParseUser.getCurrentUser().getList("movieRatings");
-                MovieRating rating = null;
-                if (movieRatings == null || !movieRatings.contains(movie)) {
-                    holder.yesAwkward.setBackgroundResource(R.drawable.transparent_button_bg);
-                    holder.noAwkward.setBackgroundResource(R.drawable.transparent_button_bg);
-                    rating = new MovieRating(movie, false);
-                } else {
-                    int index = movieRatings.indexOf(movie);
-                    ParseObject movieRating = movieRatings.get(index);
-                    if (movieRating.getBoolean("rated")) {
-                        holder.yesAwkward.setBackgroundResource(R.drawable.green_button_bg);
+                boolean hasRated = mMovieRatings.containsKey(movie.getNumber("movie_id"));
+                if (hasRated) {
+                    MovieRating movieRating = mMovieRatings.get(movie.getNumber("movie_id"));
+                    if (movieRating.isAwkward()) {
+                        holder.yesAwkward.setBackgroundResource(R.drawable.red_button_bg);
                         holder.noAwkward.setBackgroundResource(R.drawable.transparent_button_bg);
-                        rating = new MovieRating(movie, true, true);
                     } else {
                         holder.yesAwkward.setBackgroundResource(R.drawable.transparent_button_bg);
-                        holder.noAwkward.setBackgroundResource(R.drawable.red_button_bg);
-                        rating = new MovieRating(movie, true, false);
-                    }
-                }
-                */
-                boolean hasRated = mMovieRatingMap.containsKey(movie.getObjectId());
-                if (hasRated) {
-                    try {
-                        ParseObject movieRating = mMovieRatingMap.get(movie.getObjectId());
-                        if (movieRating.fetchIfNeeded().getBoolean("rating")) {
-                            holder.yesAwkward.setBackgroundResource(R.drawable.green_button_bg);
-                            holder.noAwkward.setBackgroundResource(R.drawable.transparent_button_bg);
-                        } else {
-                            holder.yesAwkward.setBackgroundResource(R.drawable.transparent_button_bg);
-                            holder.noAwkward.setBackgroundResource(R.drawable.red_button_bg);
-                        }
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error fetching MovieRating object", e);
-                        holder.yesAwkward.setBackgroundResource(R.drawable.transparent_button_bg);
-                        holder.noAwkward.setBackgroundResource(R.drawable.transparent_button_bg);
+                        holder.noAwkward.setBackgroundResource(R.drawable.green_button_bg);
                     }
                 } else {
                     holder.yesAwkward.setBackgroundResource(R.drawable.transparent_button_bg);
@@ -300,21 +180,19 @@ public class MainActivity extends ActionBarActivity {
 
                 holder.title.setText(movie.getString("title"));
 
-                Number yes = movie.getNumber("awkwardYes");
-                Number no = movie.getNumber("awkwardNo");
-                if (yes == null) {
-                    holder.rating.setText("0% awkward");
-                } else if (no == null) {
-                    holder.rating.setText("100% awkward");
+                Number yes = movie.getNumber("awkward_yes");
+                Number no = movie.getNumber("awkward_no");
+                if (yes.longValue() == 0 && no.longValue() == 0) {
+                    holder.rating.setText("No rating");
                 } else {
                     long percent = yes.longValue() * 100 / (yes.longValue() + no.longValue());
                     holder.rating.setText(percent + "% awkward");
                 }
 
-                if (movie.getString("posterPath") != null) {
+                if (movie.getString("poster_path") != null) {
                     final View background = holder.itemView;
                     final ImageView iv = holder.poster;
-                    Uri uri = Uri.parse("https://image.tmdb.org/t/p/w150" + movie.getString("posterPath")
+                    Uri uri = Uri.parse("https://image.tmdb.org/t/p/w150" + movie.getString("poster_path")
                             + "?api_key=" + NetworkHelper.getInstance(getActivity()).getApiKey());
                     Picasso.with(getActivity()).load(uri).into(holder.poster, new Callback() {
                         @Override
@@ -336,11 +214,8 @@ public class MainActivity extends ActionBarActivity {
                 }
 
                 // To keep track of which movie we're referring to when we press the yes/no buttons
-                //holder.yesAwkward.setTag(rating);
-                //holder.noAwkward.setTag(rating);
                 holder.yesAwkward.setTag(position);
                 holder.noAwkward.setTag(position);
-
                 setVoteClickListener(holder.yesAwkward, true);
                 setVoteClickListener(holder.noAwkward, false);
             }
@@ -356,43 +231,29 @@ public class MainActivity extends ActionBarActivity {
                     public void onClick(View v) {
                         int position = (int) v.getTag();
                         ParseObject movie = mMovies.get(position);
-                        String voteKey = awkward ? "awkwardYes" : "awkwardNo";
+                        String voteKey = awkward ? "awkward_yes" : "awkward_no";
 
-                        if (mMovieRatingMap.containsKey(movie.getObjectId())) {
+                        if (mMovieRatings.containsKey(movie.getNumber("movie_id"))) {
                             // User has voted on this movie before
                             // First check if user pressed the same vote button
                             // If so, unvote
-                            ParseObject movieRating = mMovieRatingMap.get(movie.getObjectId());
+                            MovieRating movieRating = mMovieRatings.get(movie.getNumber("movie_id"));
                             try {
-                                if (awkward == movieRating.fetchIfNeeded().getBoolean("rating")) {
+                                if (awkward == movieRating.isAwkward()) {
                                     // e.g. user voted yes before, now is unvoting yes
                                     // First decrement a vote for this movie
                                     if (movie.fetchIfNeeded().getNumber(voteKey) != null) {
                                         movie.put(voteKey, movie.getNumber(voteKey).longValue() - 1);
                                     }
-                                    movie.saveInBackground(new SaveCallback() {
-                                        @Override
-                                        public void done(ParseException e) {
-                                            if (e != null)
-                                                Log.e(TAG, "Error saving movie", e);
-                                        }
-                                    });
+                                    movie.saveInBackground();
 
-                                    // Then remove this rating from the user
-                                    mMovieRatingMap.remove(movie.getObjectId());
-                                    mMovieRatings = new ArrayList<>(mMovieRatingMap.values());
-                                    ParseUser.getCurrentUser().put("movieRatings", mMovieRatings);
-                                    ParseUser.getCurrentUser().saveInBackground(new SaveCallback() {
-                                        @Override
-                                        public void done(ParseException e) {
-                                            if (e != null)
-                                                Log.e(TAG, "Error saving user", e);
-                                        }
-                                    });
+                                    // Then remove this rating from the user's prefs
+                                    mMovieRatings.remove(movie.getNumber("movie_id"));
+                                    PreferencesHelper.getInstance(getActivity()).saveMovieRatings(mMovieRatings);
                                 } else {
                                     // e.g. user voted yes before, now is voting no
                                     // First decrement the original vote for this movie
-                                    String otherKey = awkward ? "awkwardNo" : "awkwardYes";
+                                    String otherKey = awkward ? "awkward_no" : "awkward_yes";
                                     if (movie.fetchIfNeeded().getNumber(otherKey) != null) {
                                         movie.put(otherKey, movie.getNumber(otherKey).longValue() - 1);
                                     }
@@ -402,35 +263,12 @@ public class MainActivity extends ActionBarActivity {
                                     } else {
                                         movie.put(voteKey, 1);
                                     }
-                                    movie.saveInBackground(new SaveCallback() {
-                                        @Override
-                                        public void done(ParseException e) {
-                                            if (e != null)
-                                                Log.e(TAG, "Error saving movie", e);
-                                        }
-                                    });
+                                    movie.saveInBackground();
 
                                     // Then change the rating to the user
-                                    movieRating.put("rating", awkward);
-                                    movieRating.saveInBackground(new SaveCallback() {
-                                        @Override
-                                        public void done(ParseException e) {
-                                            if (e != null)
-                                                Log.e(TAG, "Error saving movie rating", e);
-                                        }
-                                    });
-                                    mMovieRatingMap.put(movie.getObjectId(), movieRating);
-
-                                    // And update the user's list of movie ratings
-                                    mMovieRatings = new ArrayList<>(mMovieRatingMap.values());
-                                    ParseUser.getCurrentUser().put("movieRatings", mMovieRatings);
-                                    ParseUser.getCurrentUser().saveInBackground(new SaveCallback() {
-                                        @Override
-                                        public void done(ParseException e) {
-                                            if (e != null)
-                                                Log.e(TAG, "Error saving user", e);
-                                        }
-                                    });
+                                    movieRating.setAwkward(awkward);
+                                    mMovieRatings.put(movie.getNumber("movie_id"), movieRating);
+                                    PreferencesHelper.getInstance(getActivity()).saveMovieRatings(mMovieRatings);
                                 }
 
                                 // Finally, update our buttons
@@ -447,38 +285,15 @@ public class MainActivity extends ActionBarActivity {
                                 } else {
                                     movie.put(voteKey, 1);
                                 }
-                                movie.saveInBackground(new SaveCallback() {
-                                    @Override
-                                    public void done(ParseException e) {
-                                        if (e != null)
-                                            Log.e(TAG, "Error saving movie", e);
-                                    }
-                                });
+                                movie.saveInBackground();
 
                                 // Then save this rating to the user
                                 // Make the MovieRating object
-                                ParseObject movieRating = new ParseObject("MovieRating");
-                                movieRating.put("movie", movie);
-                                movieRating.put("rating", awkward);
-                                movieRating.saveInBackground(new SaveCallback() {
-                                    @Override
-                                    public void done(ParseException e) {
-                                        if (e != null)
-                                            Log.e(TAG, "Error saving movie rating", e);
-                                    }
-                                });
+                                MovieRating movieRating = new MovieRating(movie.getNumber("movie_id"), awkward);
 
-                                // Then add it to our Map as well as the user's list of movie ratings
-                                mMovieRatingMap.put(movie.getObjectId(), movieRating);
-                                mMovieRatings.add(movieRating);
-                                ParseUser.getCurrentUser().put("movieRatings", mMovieRatings);
-                                ParseUser.getCurrentUser().saveInBackground(new SaveCallback() {
-                                    @Override
-                                    public void done(ParseException e) {
-                                        if (e != null)
-                                            Log.e(TAG, "Error saving user", e);
-                                    }
-                                });
+                                // Then add it to the user's map of movie ratings
+                                mMovieRatings.put(movie.getNumber("movie_id"), movieRating);
+                                PreferencesHelper.getInstance(getActivity()).saveMovieRatings(mMovieRatings);
                             } catch (Exception e) {
                                 Log.e(TAG, "Error fetching Movie object", e);
                             }
@@ -492,138 +307,6 @@ public class MainActivity extends ActionBarActivity {
                         }
                     }
                 });
-            }
-
-            /*
-            public void setVoteClickListener(final boolean awkward, View v, final View otherButton) {
-                v.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        final MovieRating rating = (MovieRating) v.getTag();
-                        List<ParseObject> movieRatings = ParseUser.getCurrentUser().getList("movieRatings");
-                        if (movieRatings == null) {
-                            // User hasn't voted on anything yet
-                            // This will be their very first vote!
-                            // So add a yes/no vote to the movie
-                            addVote(rating.getMovie(), awkward);
-
-                            // Then add this movie rating to the user
-                            movieRatings = new ArrayList<ParseObject>();
-                            addMovieToUser(movieRatings, rating, awkward);
-
-                            // And change the AWK bg to green/red
-                            v.setBackgroundResource(awkward ? R.drawable.green_button_bg : R.drawable.red_button_bg);
-                        } else {
-                            if (rating.isRated()) {
-                                for (ParseObject po : movieRatings) {
-                                    try {
-                                        if (po.fetchIfNeeded().getParseObject("movie") == rating.getMovie()) {
-                                            // User has voted on this movie before, so remove the vote if it's the same option
-                                            if (rating.isAwkward() == awkward) {
-                                                removeMovieFromUser(movieRatings, rating);
-
-                                                // Decrement a yes/no vote
-                                                removeVote(rating.getMovie(), awkward);
-
-                                                // And change the button bg back to black
-                                                v.setBackgroundResource(R.drawable.transparent_button_bg);
-                                                return;
-                                            } else {
-                                                // User voted one way, then clicked the other button
-                                                // Increment the new vote
-                                                addVote(rating.getMovie(), awkward);
-
-                                                // Save the updated movie to user list
-                                                rating.getMovie().put("rating", awkward);
-                                                rating.setAwkward(awkward);
-                                                ParseUser.getCurrentUser().put("movieRatings", movieRatings);
-                                                ParseUser.getCurrentUser().saveInBackground();
-
-                                                // Decrement the other vote
-                                                removeVote(rating.getMovie(), !awkward);
-
-                                                // Then change new bg to green, old bg to black
-                                                v.setBackgroundResource(awkward ? R.drawable.green_button_bg : R.drawable.red_button_bg);
-                                                otherButton.setBackgroundResource(R.drawable.transparent_button_bg);
-                                            }
-                                        }
-                                    } catch (ParseException e) {
-                                        Log.e(TAG, "Error fetching object", e);
-                                        v.setBackgroundResource(R.drawable.transparent_button_bg);
-                                        return;
-                                    }
-                                }
-                            } else {
-                                // User hasn't vote on this movie before, so add a yes/no vote
-                                addVote(rating.getMovie(), awkward);
-
-                                // Then add this movie rating to the user
-                                addMovieToUser(movieRatings, rating, awkward);
-
-                                // And change the AWK bg to green/red
-                                v.setBackgroundResource(awkward ? R.drawable.green_button_bg : R.drawable.red_button_bg);
-                            }
-                        }
-                    }
-                });
-            }
-            */
-
-            public void addVote(ParseObject movie, boolean awkward) {
-                String key;
-                if (awkward)
-                    key = "awkwardYes";
-                else
-                    key = "awkwardNo";
-
-                if (movie.getNumber(key) != null)
-                    movie.increment(key);
-                else
-                    movie.put(key, 1);
-                movie.saveInBackground(new SaveCallback() {
-                    @Override
-                    public void done(ParseException e) {
-                        if (e != null)
-                            Log.e(TAG, "Error saving movie", e);
-                    }
-                });
-            }
-
-            public void removeVote(ParseObject movie, boolean awkward) {
-                String key;
-                if (awkward)
-                    key = "awkwardYes";
-                else
-                    key = "awkwardNo";
-
-                if (movie.getNumber(key) != null) {
-                    movie.put(key, movie.getNumber(key).longValue() - 1);
-                    movie.saveInBackground(new SaveCallback() {
-                        @Override
-                        public void done(ParseException e) {
-                            if (e != null)
-                                Log.e(TAG, "Error saving movie", e);
-                        }
-                    });
-                }
-            }
-
-            public void addMovieToUser(List<ParseObject> ratings, MovieRating rating, boolean awkward) {
-                ParseObject movieRating = new ParseObject("MovieRating");
-                movieRating.put("movie", rating.getMovie());
-                movieRating.put("rating", awkward);
-                rating.setAwkward(awkward);
-                rating.setRated(true);
-                ratings.add(movieRating);
-                ParseUser.getCurrentUser().put("movieRatings", ratings);
-                ParseUser.getCurrentUser().saveInBackground();
-            }
-
-            public void removeMovieFromUser(List<ParseObject> ratings, MovieRating rating) {
-                ratings.remove(rating.getMovie());
-                ParseUser.getCurrentUser().put("movieRatings", ratings);
-                ParseUser.getCurrentUser().saveInBackground();
-                rating.setRated(false);
             }
 
             public class ViewHolder extends RecyclerView.ViewHolder {

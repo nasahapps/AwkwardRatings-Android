@@ -5,54 +5,20 @@ package com.nasahapps.awkwardratings.model;
  */
 public class MovieRating {
 
-    private Movie movie;
-    private String movieId;
-    private boolean rated, awkward;
+    private Number movieId;
+    private boolean awkward;
 
-    public MovieRating(String id, boolean rated) {
+    public MovieRating(Number id, boolean awkward) {
         this.movieId = id;
-        this.rated = rated;
-    }
-
-    public MovieRating(String id, boolean rated, boolean awkward) {
-        this.movieId = id;
-        this.rated = rated;
         this.awkward = awkward;
     }
 
-    public MovieRating(Movie movie, boolean rated) {
-        this.movie = movie;
-        this.rated = rated;
-    }
-
-    public MovieRating(Movie movie, boolean rated, boolean awkward) {
-        this.movie = movie;
-        this.rated = rated;
-        this.awkward = awkward;
-    }
-
-    public String getMovieId() {
+    public Number getMovieId() {
         return movieId;
     }
 
-    public void setMovieId(String id) {
+    public void setMovieId(Number id) {
         this.movieId = id;
-    }
-
-    public Movie getMovie() {
-        return movie;
-    }
-
-    public void setMovie(Movie movie) {
-        this.movie = movie;
-    }
-
-    public boolean isRated() {
-        return rated;
-    }
-
-    public void setRated(boolean rated) {
-        this.rated = rated;
     }
 
     public boolean isAwkward() {

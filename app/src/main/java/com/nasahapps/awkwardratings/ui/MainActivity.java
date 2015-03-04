@@ -9,33 +9,36 @@ import android.support.v7.app.ActionBarActivity;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.DecelerateInterpolator;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.malinskiy.superrecyclerview.OnMoreListener;
 import com.malinskiy.superrecyclerview.SuperRecyclerView;
+import com.nasahapps.awkwardratings.PreferencesHelper;
 import com.nasahapps.awkwardratings.R;
 import com.nasahapps.awkwardratings.Utils;
-import com.nasahapps.awkwardratings.model.Movie;
+import com.nasahapps.awkwardratings.model.MovieRating;
 import com.nasahapps.awkwardratings.service.NetworkHelper;
-import com.nasahapps.awkwardratings.service.response.PopularMovieResponse;
+import com.parse.FindCallback;
+import com.parse.ParseException;
+import com.parse.ParseObject;
+import com.parse.ParseQuery;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import de.greenrobot.event.EventBus;
-
-/**
- * Created by Hakeem on 2/28/15
- */
 
 public class MainActivity extends ActionBarActivity {
 
@@ -55,20 +58,14 @@ public class MainActivity extends ActionBarActivity {
     public static class MainFragment extends Fragment {
 
         private SuperRecyclerView mRecyclerView;
-        private List<Movie> mMovies = new ArrayList<>();
-        private Toolbar mToolbar;
-        // For keeping track of which page of API results we're on
-        private int currentPage = 1;
+        private List<ParseObject> mMovies = new ArrayList<>();
+        private Map<Number, MovieRating> mMovieRatings = new HashMap<>();
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View v = inflater.inflate(R.layout.fragment_main, container, false);
             setRetainInstance(true);
-
-            // Set our Toolbar as the support ActionBar
-            mToolbar = (Toolbar) v.findViewById(R.id.toolbar);
-            ((ActionBarActivity) getActivity()).setSupportActionBar(mToolbar);
 
             mRecyclerView = (SuperRecyclerView) v.findViewById(R.id.list);
             // Lay out in a linear fashion (ala ListView)
@@ -91,65 +88,65 @@ public class MainActivity extends ActionBarActivity {
                     getMovies();
                 }
             }, 10);
-            mRecyclerView.setOnScrollListener(new HidingScrollListener() {
-                @Override
-                public void onHide() {
-                    mToolbar.animate().translationY(-mToolbar.getHeight()).setInterpolator(new AccelerateInterpolator(2));
+            // Also, set the adapter if we already have movies (used if device was rotated)
+            if (savedInstanceState != null) {
+                MovieAdapter adapter = new MovieAdapter(mMovies);
+                mRecyclerView.setAdapter(adapter);
+            }
+
+            // Only get movies if this is the first time loading
+            if (savedInstanceState == null) {
+                // Also load user's movie ratings from prefs
+                String json = PreferencesHelper.getInstance(getActivity())
+                        .getString(PreferencesHelper.KEY_MOVIE_RATINGS, null);
+                if (json != null) {
+                    Type type = new TypeToken<Map<Integer, MovieRating>>() {
+                    }.getType();
+                    mMovieRatings = new Gson().fromJson(json, type);
                 }
 
-                @Override
-                public void onShow() {
-                    mToolbar.animate().translationY(0).setInterpolator(new DecelerateInterpolator(2));
-                }
-            });
-
-            EventBus.getDefault().register(this);
-
-            // Let's get our movies
-            getMovies();
+                getMovies();
+            }
 
             return v;
         }
 
-        @Override
-        public void onStart() {
-            super.onStart();
-            if (!EventBus.getDefault().isRegistered(this))
-                EventBus.getDefault().register(this);
-        }
-
-        @Override
-        public void onStop() {
-            super.onStop();
-            if (EventBus.getDefault().isRegistered(this))
-                EventBus.getDefault().unregister(this);
-        }
-
         public void getMovies() {
-            NetworkHelper.getInstance(getActivity()).getPopularMovies(currentPage);
-        }
+            // Query our db for the movies
+            ParseQuery<ParseObject> query = ParseQuery.getQuery("Movie");
+            // Ordered by most recently updated
+            query.orderByDescending("updatedAt");
+            // For pagination
+            query.setSkip(mMovies.size());
+            // Get 1000 at a time
+            query.setLimit(1000);
+            query.findInBackground(new FindCallback<ParseObject>() {
+                @Override
+                public void done(List<ParseObject> parseObjects, ParseException e) {
+                    mRecyclerView.hideMoreProgress();
 
-        public void onEvent(PopularMovieResponse resp) {
-            if (resp != null) {
-                mMovies.addAll(resp.getResults());
-                currentPage++;
-                if (mRecyclerView.getAdapter() == null) {
-                    // If just creating our list, create it with a new adapter
-                    MovieAdapter adapter = new MovieAdapter(mMovies);
-                    mRecyclerView.setAdapter(adapter);
-                } else {
-                    // Else, just notify our adapter of the newly added items
-                    mRecyclerView.getAdapter().notifyDataSetChanged();
+                    if (e == null) {
+                        if (mMovies.isEmpty()) {
+                            // Create a new adapter to bind to our RecyclerView
+                            mMovies.addAll(parseObjects);
+                            MovieAdapter adapter = new MovieAdapter(mMovies);
+                            mRecyclerView.setAdapter(adapter);
+                        } else {
+                            // Add our results to what we already have
+                            mMovies.addAll(parseObjects);
+                            mRecyclerView.getAdapter().notifyDataSetChanged();
+                        }
+                    } else {
+                        Utils.showError(getActivity(), TAG, "Error querying movies", e, e.getLocalizedMessage());
+                    }
                 }
-
-                mRecyclerView.hideMoreProgress();
-            }
+            });
         }
 
         public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> {
-            private List<Movie> movies;
+            private List<ParseObject> movies;
 
-            public MovieAdapter(List<Movie> movies) {
+            public MovieAdapter(List<ParseObject> movies) {
                 this.movies = movies;
             }
 
@@ -161,24 +158,45 @@ public class MainActivity extends ActionBarActivity {
 
             @Override
             public void onBindViewHolder(ViewHolder holder, int position) {
-                Movie movie = movies.get(position);
+                ParseObject movie = movies.get(position);
 
                 // Reset background to black when scrolling down
                 holder.itemView.setBackgroundColor(Color.BLACK);
+                // And set the button bgs depending on whether user voted or not for this movie
+                boolean hasRated = mMovieRatings.containsKey(movie.getNumber("movie_id"));
+                if (hasRated) {
+                    MovieRating movieRating = mMovieRatings.get(movie.getNumber("movie_id"));
+                    if (movieRating.isAwkward()) {
+                        holder.yesAwkward.setBackgroundResource(R.drawable.red_button_bg);
+                        holder.noAwkward.setBackgroundResource(R.drawable.transparent_button_bg);
+                    } else {
+                        holder.yesAwkward.setBackgroundResource(R.drawable.transparent_button_bg);
+                        holder.noAwkward.setBackgroundResource(R.drawable.green_button_bg);
+                    }
+                } else {
+                    holder.yesAwkward.setBackgroundResource(R.drawable.transparent_button_bg);
+                    holder.noAwkward.setBackgroundResource(R.drawable.transparent_button_bg);
+                }
 
-                // Set movie title
-                holder.title.setText(movie.getTitle());
+                holder.title.setText(movie.getString("title"));
 
-                // If movie had a poster, get the picture and set it
-                if (movie.getPosterPath() != null) {
+                Number yes = movie.getNumber("awkward_yes");
+                Number no = movie.getNumber("awkward_no");
+                if (yes.longValue() == 0 && no.longValue() == 0) {
+                    holder.rating.setText("No rating");
+                } else {
+                    long percent = yes.longValue() * 100 / (yes.longValue() + no.longValue());
+                    holder.rating.setText(percent + "% awkward");
+                }
+
+                if (movie.getString("poster_path") != null) {
                     final View background = holder.itemView;
                     final ImageView iv = holder.poster;
-                    Uri uri = Uri.parse("https://image.tmdb.org/t/p/w150" + movie.getPosterPath()
+                    Uri uri = Uri.parse("https://image.tmdb.org/t/p/w150" + movie.getString("poster_path")
                             + "?api_key=" + NetworkHelper.getInstance(getActivity()).getApiKey());
                     Picasso.with(getActivity()).load(uri).into(holder.poster, new Callback() {
                         @Override
                         public void onSuccess() {
-                            // Color the background after getting the picture
                             Palette.generateAsync(Utils.getImageViewBitmap(iv), new Palette.PaletteAsyncListener() {
                                 @Override
                                 public void onGenerated(Palette p) {
@@ -194,6 +212,12 @@ public class MainActivity extends ActionBarActivity {
                         }
                     });
                 }
+
+                // To keep track of which movie we're referring to when we press the yes/no buttons
+                holder.yesAwkward.setTag(position);
+                holder.noAwkward.setTag(position);
+                setVoteClickListener(holder.yesAwkward, true);
+                setVoteClickListener(holder.noAwkward, false);
             }
 
             @Override
@@ -201,15 +225,102 @@ public class MainActivity extends ActionBarActivity {
                 return movies.size();
             }
 
+            public void setVoteClickListener(View v, final boolean awkward) {
+                v.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        int position = (int) v.getTag();
+                        ParseObject movie = mMovies.get(position);
+                        String voteKey = awkward ? "awkward_yes" : "awkward_no";
+
+                        if (mMovieRatings.containsKey(movie.getNumber("movie_id"))) {
+                            // User has voted on this movie before
+                            // First check if user pressed the same vote button
+                            // If so, unvote
+                            MovieRating movieRating = mMovieRatings.get(movie.getNumber("movie_id"));
+                            try {
+                                if (awkward == movieRating.isAwkward()) {
+                                    // e.g. user voted yes before, now is unvoting yes
+                                    // First decrement a vote for this movie
+                                    if (movie.fetchIfNeeded().getNumber(voteKey) != null) {
+                                        movie.put(voteKey, movie.getNumber(voteKey).longValue() - 1);
+                                    }
+                                    movie.saveInBackground();
+
+                                    // Then remove this rating from the user's prefs
+                                    mMovieRatings.remove(movie.getNumber("movie_id"));
+                                    PreferencesHelper.getInstance(getActivity()).saveMovieRatings(mMovieRatings);
+                                } else {
+                                    // e.g. user voted yes before, now is voting no
+                                    // First decrement the original vote for this movie
+                                    String otherKey = awkward ? "awkward_no" : "awkward_yes";
+                                    if (movie.fetchIfNeeded().getNumber(otherKey) != null) {
+                                        movie.put(otherKey, movie.getNumber(otherKey).longValue() - 1);
+                                    }
+                                    // Then increment the new vote
+                                    if (movie.getNumber(voteKey) != null) {
+                                        movie.increment(voteKey);
+                                    } else {
+                                        movie.put(voteKey, 1);
+                                    }
+                                    movie.saveInBackground();
+
+                                    // Then change the rating to the user
+                                    movieRating.setAwkward(awkward);
+                                    mMovieRatings.put(movie.getNumber("movie_id"), movieRating);
+                                    PreferencesHelper.getInstance(getActivity()).saveMovieRatings(mMovieRatings);
+                                }
+
+                                // Finally, update our buttons
+                                mRecyclerView.getAdapter().notifyItemChanged(position);
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error fetching MovieRating or Movie object", e);
+                            }
+                        } else {
+                            // User hasn't voted on this movie before
+                            // So first increment a vote for this movie
+                            try {
+                                if (movie.fetchIfNeeded().getNumber(voteKey) != null) {
+                                    movie.increment(voteKey);
+                                } else {
+                                    movie.put(voteKey, 1);
+                                }
+                                movie.saveInBackground();
+
+                                // Then save this rating to the user
+                                // Make the MovieRating object
+                                MovieRating movieRating = new MovieRating(movie.getNumber("movie_id"), awkward);
+
+                                // Then add it to the user's map of movie ratings
+                                mMovieRatings.put(movie.getNumber("movie_id"), movieRating);
+                                PreferencesHelper.getInstance(getActivity()).saveMovieRatings(mMovieRatings);
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error fetching Movie object", e);
+                            }
+
+                            // Then finally, let's update our buttons
+                            try {
+                                mRecyclerView.getAdapter().notifyItemChanged(position);
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error notifying item changed at position " + position);
+                            }
+                        }
+                    }
+                });
+            }
+
             public class ViewHolder extends RecyclerView.ViewHolder {
                 public TextView title, rating;
                 public ImageView poster;
+                public Button yesAwkward, noAwkward;
 
                 public ViewHolder(View v) {
                     super(v);
                     title = (TextView) v.findViewById(R.id.title);
                     rating = (TextView) v.findViewById(R.id.rating);
                     poster = (ImageView) v.findViewById(R.id.poster);
+                    yesAwkward = (Button) v.findViewById(R.id.awkwardButton);
+                    noAwkward = (Button) v.findViewById(R.id.notAwkwardButton);
                 }
             }
         }

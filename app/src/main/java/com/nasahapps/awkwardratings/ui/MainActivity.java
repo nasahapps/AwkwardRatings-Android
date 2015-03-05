@@ -100,9 +100,14 @@ public class MainActivity extends ActionBarActivity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View v = inflater.inflate(R.layout.fragment_main, container, false);
+            // So the fragment isn't recreated on rotation
             setRetainInstance(true);
+            // And we attach a menu for this fragment
             setHasOptionsMenu(true);
 
+            // To implement the hiding ActionBar, we must have the style of this fragment's
+            // Activity not have an ActionBar and put in a Toolbar in the xml layout so we can
+            // manually show/hide the Toolbar as the user scrolls through the list of movies
             mToolbar = (Toolbar) v.findViewById(R.id.toolbar);
             ((ActionBarActivity) getActivity()).setSupportActionBar(mToolbar);
 
@@ -151,6 +156,8 @@ public class MainActivity extends ActionBarActivity {
             // The ListView holding our search results
             mSearchListView = (ListView) v.findViewById(R.id.searchListView);
             // Repopulate the listview if user rotated the device
+            // On rotation, mSearchedMovies is retained and thus if it wasn't null before rotation,
+            // it won't be null after rotation
             if (mSearchedMovies != null) {
                 SearchMovieAdapter adapter = new SearchMovieAdapter(getActivity(), mSearchedMovies);
                 mSearchListView.setAdapter(adapter);
@@ -168,8 +175,11 @@ public class MainActivity extends ActionBarActivity {
                         @Override
                         public void done(ParseObject parseObject, ParseException e) {
                             if (e == null) {
+                                // Not sure if no object would return a null ParseObject or
+                                // return a ParseException saying no results returned. So
+                                // implementing for both cases
                                 if (parseObject != null) {
-                                    // We have this movie in our database, proceed
+                                    // We have this movie in our database, open this movie's page
                                     Intent i = new Intent(getActivity(), MovieActivity.class);
                                     i.putExtra(MovieActivity.EXTRA_ID, m.getId());
                                     startActivity(i);
@@ -231,7 +241,7 @@ public class MainActivity extends ActionBarActivity {
 
             EventBus.getDefault().register(this);
 
-            // Only get movies if this is the first time loading
+            // Only get movies if this is the first time loading (not after rotation)
             if (savedInstanceState == null) {
                 // Also load user's movie ratings from prefs
                 mMovieRatings = PreferencesHelper.getInstance(getActivity()).loadMovieRatings();
@@ -290,7 +300,11 @@ public class MainActivity extends ActionBarActivity {
             searchView.setSearchableInfo(searchManager.getSearchableInfo(getActivity().getComponentName()));
             searchView.setIconifiedByDefault(true); // Show as an icon by default
             searchView.setQueryHint("Search movies"); // For some reason, setting this in xml doesn't work
-            searchView.setQuery(mLastQuery, false);
+            searchView.setQuery(mLastQuery, false); // If user rotated, pre-fill the search bar with
+            // the user's last query
+            // Also side note, when the user presses the "return" key on the keyboard, this doesn't
+            // do a search simply because a search is already being done as they type. Pressing "return"
+            // just hides the keyboard if it's showing
 
             MenuItem searchItem = menu.findItem(R.id.searchMenuItem);
             // This was added because some devices wouldn't get rid of the SearchListView
@@ -304,7 +318,6 @@ public class MainActivity extends ActionBarActivity {
 
                 @Override
                 public boolean onMenuItemActionCollapse(MenuItem menuItem) {
-                    //searchView.setQuery("", false);
                     mSearchListView.setAdapter(null);
                     mSearchListView.setVisibility(View.GONE);
                     mSearchedMovies = null;
@@ -333,6 +346,9 @@ public class MainActivity extends ActionBarActivity {
             super.onCreateOptionsMenu(menu, inflater);
         }
 
+        /**
+         * For getting movies from our Parse DB
+         */
         public void getMovies() {
             // Query our db for the movies
             ParseQuery<ParseObject> query = ParseQuery.getQuery("Movie");
@@ -371,6 +387,7 @@ public class MainActivity extends ActionBarActivity {
 
         public void onEvent(MovieResponse response) {
             if (response.getResults() != null) {
+                // Fill our search ListView with search results
                 mSearchedMovies = response.getResults();
                 SearchMovieAdapter adapter = new SearchMovieAdapter(getActivity(), mSearchedMovies);
                 mSearchListView.setAdapter(adapter);
@@ -418,6 +435,7 @@ public class MainActivity extends ActionBarActivity {
 
                 holder.title.setText(movie.getString("title"));
 
+                // Set awkward rating based on votes
                 long percent = VoteHelper.getVote(movie);
                 if (percent == -1)
                     holder.rating.setText("No rating");
@@ -425,6 +443,7 @@ public class MainActivity extends ActionBarActivity {
                     holder.rating.setText(percent + "% awkward");
 
                 if (movie.getString("poster_path") != null) {
+                    // Get movie poster and Palette color
                     final View background = holder.itemView;
                     final ImageView iv = holder.poster;
                     Uri uri = Uri.parse("https://image.tmdb.org/t/p/w150" + movie.getString("poster_path")
@@ -471,9 +490,6 @@ public class MainActivity extends ActionBarActivity {
                         mRecyclerView.getAdapter().notifyItemChanged(position);
                     }
                 });
-
-                //setVoteClickListener(holder.yesAwkward, true);
-                //setVoteClickListener(holder.noAwkward, false);
 
                 // And a click listener for the entire item itself to bring up a detailed movie page
                 holder.itemView.setTag(position);
@@ -527,9 +543,11 @@ public class MainActivity extends ActionBarActivity {
 
                 Movie m = getItem(position);
 
+                // Set movie title
                 TextView title = (TextView) convertView.findViewById(R.id.title);
                 title.setText(m.getTitle());
 
+                // and release date if there is one
                 TextView releaseDate = (TextView) convertView.findViewById(R.id.releaseDate);
                 releaseDate.setVisibility(View.VISIBLE);
                 try {
@@ -546,6 +564,7 @@ public class MainActivity extends ActionBarActivity {
                     releaseDate.setVisibility(View.GONE);
                 }
 
+                // Set movie poster and Palette color
                 final ImageView poster = (ImageView) convertView.findViewById(R.id.poster);
                 final View background = convertView;
                 Uri uri = Uri.parse("https://image.tmdb.org/t/p/w150" + m.getPosterPath()

@@ -89,7 +89,13 @@ public class VoteHelper {
         if (yes.longValue() == 0 && no.longValue() == 0) {
             return -1;
         } else {
-            return yes.longValue() * 100 / (yes.longValue() + no.longValue());
+            try {
+                return yes.longValue() * 100 / (yes.longValue() + no.longValue());
+            } catch (ArithmeticException e) {
+                Log.wtf(TAG, "Tried to divide by zero, even though if both were zero this else " +
+                        "statement shouldn't have run in the first place. WTF indeed.", e);
+                return -1;
+            }
         }
     }
 

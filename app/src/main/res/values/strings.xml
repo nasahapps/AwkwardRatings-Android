@@ -1,6 +1,4 @@
 <resources>
     <string name="app_name">Awkward Ratings</string>
-    <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
-    <string name="title_activity_movie">MovieActivity</string>
+    <string name="error_player">There was an error initializing the YouTube player (%1$s)</string>
 </resources>

@@ -1,20 +1,24 @@
 package com.nasahapps.awkwardratings.ui;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.graphics.Palette;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.youtube.player.YouTubeStandalonePlayer;
 import com.nasahapps.awkwardratings.PreferencesHelper;
 import com.nasahapps.awkwardratings.R;
 import com.nasahapps.awkwardratings.Utils;
@@ -32,6 +36,7 @@ import com.squareup.picasso.Picasso;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
+import java.util.Scanner;
 
 import de.greenrobot.event.EventBus;
 import retrofit.RetrofitError;
@@ -45,7 +50,6 @@ public class MovieActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         if (savedInstanceState == null) {
             int id = getIntent().getExtras().getInt(EXTRA_ID);
             getSupportFragmentManager().beginTransaction()
@@ -75,8 +79,11 @@ public class MovieActivity extends ActionBarActivity {
         private ImageView mBackdrop, mPoster;
         private TextView mTitle, mMoreInfo, mOverview;
         private Button mNotAwkwardButton, mAwkwardButton, mAwkwardness;
+        private ImageButton mPlayTrailer;
         private Map<Integer, MovieRating> mMovieRatings;
         private int mId;
+        private Toolbar mToolbar;
+        private Movie mMovie;
 
         public static MovieFragment newInstance(int id) {
             Bundle args = new Bundle();
@@ -95,6 +102,11 @@ public class MovieActivity extends ActionBarActivity {
             mId = getArguments().getInt(EXTRA_ID);
             mMovieRatings = PreferencesHelper.getInstance(getActivity()).loadMovieRatings();
 
+            mToolbar = (Toolbar) v.findViewById(R.id.toolbar);
+            mToolbar.setTitle("");
+            ((ActionBarActivity) getActivity()).setSupportActionBar(mToolbar);
+            ((ActionBarActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
             // Initialize views
             // mBackground is used for adjusting the background color of the entire view
             mBackground = v.findViewById(R.id.parentLayout);
@@ -107,11 +119,14 @@ public class MovieActivity extends ActionBarActivity {
             mOverview = (TextView) v.findViewById(R.id.overview);
             mNotAwkwardButton = (Button) v.findViewById(R.id.notAwkwardButton);
             mAwkwardButton = (Button) v.findViewById(R.id.awkwardButton);
+            mPlayTrailer = (ImageButton) v.findViewById(R.id.playTrailer);
 
             EventBus.getDefault().register(this);
 
             if (savedInstanceState == null) {
                 getMovie();
+            } else {
+                onEvent(mMovie);
             }
 
             return v;
@@ -137,14 +152,15 @@ public class MovieActivity extends ActionBarActivity {
 
         public void onEvent(Movie movie) {
             if (movie != null) {
+                mMovie = movie;
                 // Set the backdrop and poster, if available
-                if (movie.getBackdropPath() != null) {
-                    Uri uri = Uri.parse("https://image.tmdb.org/t/p/w300" + movie.getBackdropPath()
+                if (mMovie.getBackdropPath() != null) {
+                    Uri uri = Uri.parse("https://image.tmdb.org/t/p/w300" + mMovie.getBackdropPath()
                             + "?api_key=" + NetworkHelper.getInstance(getActivity()).getApiKey());
                     Picasso.with(getActivity()).load(uri).into(mBackdrop);
                 }
-                if (movie.getPosterPath() != null) {
-                    Uri uri = Uri.parse("https://image.tmdb.org/t/p/w150" + movie.getPosterPath()
+                if (mMovie.getPosterPath() != null) {
+                    Uri uri = Uri.parse("https://image.tmdb.org/t/p/w150" + mMovie.getPosterPath()
                             + "?api_key=" + NetworkHelper.getInstance(getActivity()).getApiKey());
                     Picasso.with(getActivity()).load(uri).into(mPoster, new Callback() {
                         @Override
@@ -165,32 +181,60 @@ public class MovieActivity extends ActionBarActivity {
                     });
                 }
 
+                // Hide the play button if there is no trailer
+                // Else set up the click listener
+                if (mMovie.getVideos() != null
+                        && mMovie.getVideos().getResults() != null
+                        && !mMovie.getVideos().getResults().isEmpty()
+                        && mMovie.getVideos().getResults().get(0).getSite().equals("YouTube")
+                        && mMovie.getVideos().getResults().get(0).getType().equals("Trailer")) {
+                    mPlayTrailer.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Scanner s = new Scanner(getResources().openRawResource(R.raw.youtube));
+                            try {
+                                String key = null;
+                                while (s.hasNext()) {
+                                    key = s.next();
+                                }
+                                Intent i = YouTubeStandalonePlayer.createVideoIntent(getActivity(), key,
+                                        mMovie.getVideos().getResults().get(0).getKey(), 0, true, false);
+                                startActivity(i);
+                            } finally {
+                                s.close();
+                            }
+                        }
+                    });
+                } else {
+                    mPlayTrailer.setVisibility(View.GONE);
+                }
+
                 // Set the movie title
-                mTitle.setText(movie.getTitle());
+                mTitle.setText(mMovie.getTitle());
                 // Additional movie info will be "Month yyyy <dot> mmm minutes"
                 try {
-                    if (movie.getReleaseDate() != null) {
+                    if (mMovie.getReleaseDate() != null) {
                         SimpleDateFormat originalFormat = new SimpleDateFormat("yyyy-MM-dd");
-                        Date date = originalFormat.parse(movie.getReleaseDate());
+                        Date date = originalFormat.parse(mMovie.getReleaseDate());
                         SimpleDateFormat newFormat = new SimpleDateFormat("MMMM yyyy");
                         String formattedDate = newFormat.format(date);
                         StringBuilder sb = new StringBuilder(formattedDate);
                         // If we have runtime length, add it to the string
-                        if (movie.getRuntime() != 0) {
-                            sb.append(" \u00b7 " + movie.getRuntime() + " minutes");
+                        if (mMovie.getRuntime() != 0) {
+                            sb.append(" \u00b7 " + mMovie.getRuntime() + " minutes");
                         }
                         mMoreInfo.setText(sb.toString());
                     } else {
-                        if (movie.getRuntime() != 0) {
-                            mMoreInfo.setText(movie.getRuntime() + " minutes");
+                        if (mMovie.getRuntime() != 0) {
+                            mMoreInfo.setText(mMovie.getRuntime() + " minutes");
                         } else {
                             mMoreInfo.setVisibility(View.GONE);
                         }
                     }
                 } catch (Exception e) {
                     Log.e(TAG, "Error parsing date", e);
-                    if (movie.getRuntime() != 0) {
-                        mMoreInfo.setText(movie.getRuntime() + " minutes");
+                    if (mMovie.getRuntime() != 0) {
+                        mMoreInfo.setText(mMovie.getRuntime() + " minutes");
                     } else {
                         mMoreInfo.setVisibility(View.GONE);
                     }
@@ -279,8 +323,8 @@ public class MovieActivity extends ActionBarActivity {
                     }
                 });
 
-                if (movie.getOverview() != null) {
-                    mOverview.setText(movie.getOverview());
+                if (mMovie.getOverview() != null) {
+                    mOverview.setText(mMovie.getOverview());
                 }
             } else {
                 Toast.makeText(getActivity(), "Error getting movie info", Toast.LENGTH_SHORT).show();

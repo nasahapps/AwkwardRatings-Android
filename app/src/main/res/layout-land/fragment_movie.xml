@@ -77,55 +77,49 @@
                             android:textSize="15sp"
                             tools:text="July 2012 \u00b7 136 minutes"/>
 
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:orientation="horizontal">
+
+                            <Button
+                                android:id="@+id/notAwkwardButton"
+                                android:layout_width="56dp"
+                                android:layout_height="56dp"
+                                android:layout_toLeftOf="@+id/awkwardness"
+                                android:background="@drawable/transparent_circle"
+                                android:text="NOT"
+                                android:textColor="#fff"
+                                tools:background="@drawable/green_circle"/>
+
+                            <Button
+                                android:id="@+id/awkwardness"
+                                android:layout_width="56dp"
+                                android:layout_height="56dp"
+                                android:layout_centerHorizontal="true"
+                                android:layout_marginLeft="32dp"
+                                android:layout_marginRight="32dp"
+                                android:background="@drawable/transparent_circle"
+                                android:textColor="#fff"
+                                tools:background="@drawable/green_circle"
+                                tools:text="86%"/>
+
+                            <Button
+                                android:id="@+id/awkwardButton"
+                                android:layout_width="56dp"
+                                android:layout_height="56dp"
+                                android:layout_toRightOf="@id/awkwardness"
+                                android:background="@drawable/transparent_circle"
+                                android:text="AWK"
+                                android:textColor="#fff"
+                                tools:background="@drawable/red_circle"/>
+
+                        </LinearLayout>
+
                     </LinearLayout>
 
                 </LinearLayout>
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp">
-
-                    <Button
-                        android:id="@+id/notAwkwardButton"
-                        android:layout_width="56dp"
-                        android:layout_height="56dp"
-                        android:layout_toLeftOf="@+id/awkwardness"
-                        android:background="@drawable/transparent_circle"
-                        android:text="NOT"
-                        android:textColor="#fff"
-                        tools:background="@drawable/green_circle"/>
-
-                    <Button
-                        android:id="@+id/awkwardness"
-                        android:layout_width="56dp"
-                        android:layout_height="56dp"
-                        android:layout_centerHorizontal="true"
-                        android:layout_marginLeft="32dp"
-                        android:layout_marginRight="32dp"
-                        android:background="@drawable/transparent_circle"
-                        android:textColor="#fff"
-                        tools:background="@drawable/green_circle"
-                        tools:text="86%"/>
-
-                    <Button
-                        android:id="@+id/awkwardButton"
-                        android:layout_width="56dp"
-                        android:layout_height="56dp"
-                        android:layout_toRightOf="@id/awkwardness"
-                        android:background="@drawable/transparent_circle"
-                        android:text="AWK"
-                        android:textColor="#fff"
-                        tools:background="@drawable/red_circle"/>
-
-                </RelativeLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginTop="4dp"
-                    android:text="awkward"/>
 
                 <View
                     android:layout_width="match_parent"

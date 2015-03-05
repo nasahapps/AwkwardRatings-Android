@@ -11,6 +11,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -29,7 +30,7 @@ import java.util.List;
 
 /**
  * Created by Hakeem on 2/28/15.
- *
+ * <p/>
  * Just convenience methods I use in all my apps, gathered into one collective helper class.
  */
 public class Utils {
@@ -142,15 +143,14 @@ public class Utils {
     }
 
     public static void animateToColor(View v, int color) {
-        /*
+        int originalColor = v.getBackground() != null ? ((ColorDrawable) v.getBackground()).getColor()
+                : 0xff000000;
         ValueAnimator colorAnim = ObjectAnimator.ofInt(v, "backgroundColor",
-                ((ColorDrawable) v.getBackground()).getColor(), color);
+                originalColor, color);
         colorAnim.setDuration(250);
         colorAnim.setEvaluator(new ArgbEvaluator());
         colorAnim.setInterpolator(new DecelerateInterpolator());
         colorAnim.start();
-        */
-        v.setBackgroundColor(color);
     }
 
     public static void animateFromBlackToColor(View v, int color) {
@@ -160,6 +160,19 @@ public class Utils {
         colorAnim.setEvaluator(new ArgbEvaluator());
         colorAnim.setInterpolator(new DecelerateInterpolator());
         colorAnim.start();
+    }
+
+    public static int alternateColor(int color, float multiple) {
+        // Separate the RGB values
+        int oldR = color & (0x11 << 4);
+        int oldG = color & (0x11 << 2);
+        int oldB = color & 0x11;
+        int newRGB = 0;
+        // Set the new RGB values
+        newRGB = newRGB | ((int) (oldR * multiple) << 4);
+        newRGB = newRGB | ((int) (oldG * multiple) << 2);
+        newRGB = newRGB | (int) (oldB * multiple);
+        return newRGB;
     }
 
 }

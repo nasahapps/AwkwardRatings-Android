@@ -19,7 +19,7 @@ App demonstrates the use of REST APIs via [Retrofit](http://square.github.io/ret
 * tmdb
 * youtube
 
-Where the parse file is just a two-line file where the first line is your application ID and the second line is your client key, and the tmdb and youtube files are one-line files that contain their respective API keys.  
+where the parse file is just a two-line file where the first line is your application ID and the second line is your client key, and the tmdb and youtube files are one-line files that contain their respective API keys.  
 
 <h2>Parse Database</h2>  
 

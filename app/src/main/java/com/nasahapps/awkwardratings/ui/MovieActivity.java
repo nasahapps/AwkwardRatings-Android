@@ -207,7 +207,12 @@ public class MovieActivity extends ActionBarActivity {
                                 }
                                 Intent i = YouTubeStandalonePlayer.createVideoIntent(getActivity(), key,
                                         mMovie.getVideos().getResults().get(0).getKey(), 0, true, false);
-                                startActivity(i);
+                                // YouTube app must be installed, so check for that
+                                if (Utils.hasValidAppToOpen(i, getActivity()))
+                                    startActivity(i);
+                                else
+                                    Toast.makeText(getActivity(), "YouTube app not installed", Toast.LENGTH_SHORT)
+                                            .show();
                             } finally {
                                 s.close();
                             }

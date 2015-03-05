@@ -162,17 +162,8 @@ public class Utils {
         colorAnim.start();
     }
 
-    public static int alternateColor(int color, float multiple) {
-        // Separate the RGB values
-        int oldR = color & (0x11 << 4);
-        int oldG = color & (0x11 << 2);
-        int oldB = color & 0x11;
-        int newRGB = 0;
-        // Set the new RGB values
-        newRGB = newRGB | ((int) (oldR * multiple) << 4);
-        newRGB = newRGB | ((int) (oldG * multiple) << 2);
-        newRGB = newRGB | (int) (oldB * multiple);
-        return newRGB;
+    public static boolean hasValidAppToOpen(Intent i, Context c) {
+        return i.resolveActivity(c.getPackageManager()) != null;
     }
 
 }

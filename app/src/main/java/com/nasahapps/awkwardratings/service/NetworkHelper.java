@@ -51,7 +51,7 @@ public class NetworkHelper {
 
         // If the key was null, you should get yourself a key!
         // Else this app won't work. Can't help you there!
-        // https://www.themoviedb.org
+        // https://www.themoviedb.org/documentation/api
         if (mTMDBKey != null) {
             RestAdapter restAdapter = new RestAdapter.Builder()
                     .setLogLevel(BuildConfig.DEBUG ? RestAdapter.LogLevel.FULL

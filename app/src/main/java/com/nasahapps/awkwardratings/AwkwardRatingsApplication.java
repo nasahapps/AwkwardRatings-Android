@@ -17,6 +17,7 @@ public class AwkwardRatingsApplication extends Application {
     public void onCreate() {
         super.onCreate();
         // Uses Parse key and secret
+        // Get your api keys from https://www.parse.com
         Scanner s = new Scanner(getResources().openRawResource(R.raw.parse));
         try {
             List<String> parseKeys = new ArrayList<>();

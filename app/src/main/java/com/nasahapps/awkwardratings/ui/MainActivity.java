@@ -60,6 +60,9 @@ import java.util.Map;
 
 import de.greenrobot.event.EventBus;
 import de.psdev.licensesdialog.LicensesDialog;
+import jp.wasabeef.recyclerview.animators.adapters.AlphaInAnimationAdapter;
+import jp.wasabeef.recyclerview.animators.adapters.ScaleInAnimationAdapter;
+import jp.wasabeef.recyclerview.animators.adapters.SlideInBottomAnimationAdapter;
 import retrofit.RetrofitError;
 
 
@@ -151,7 +154,9 @@ public class MainActivity extends ActionBarActivity {
             // Also, set the adapter if we already have movies (used if device was rotated)
             if (savedInstanceState != null) {
                 MovieAdapter adapter = new MovieAdapter(mMovies);
-                mRecyclerView.setAdapter(adapter);
+                // Scale in, alpha in, and slide in from bottom new items
+                mRecyclerView.setAdapter(new SlideInBottomAnimationAdapter(
+                        new ScaleInAnimationAdapter(new AlphaInAnimationAdapter(adapter))));
             }
 
             // The ListView holding our search results
@@ -214,12 +219,17 @@ public class MainActivity extends ActionBarActivity {
                                 // Add this movie to our database so users can vote on it
                                 ParseObject movie = new ParseObject("Movie");
                                 movie.put("adult", m.isAdult());
-                                movie.put("backdrop_path", m.getBackdropPath());
+                                if (m.getBackdropPath() != null)
+                                    movie.put("backdrop_path", m.getBackdropPath());
                                 movie.put("movie_id", m.getId());
-                                movie.put("original_title", m.getOriginalTitle());
-                                movie.put("release_date", m.getReleaseDate());
-                                movie.put("poster_path", m.getPosterPath());
-                                movie.put("title", m.getTitle());
+                                if (m.getOriginalTitle() != null)
+                                    movie.put("original_title", m.getOriginalTitle());
+                                if (m.getReleaseDate() != null)
+                                    movie.put("release_date", m.getReleaseDate());
+                                if (m.getPosterPath() != null)
+                                    movie.put("poster_path", m.getPosterPath());
+                                if (m.getTitle() != null)
+                                    movie.put("title", m.getTitle());
                                 movie.saveInBackground(new SaveCallback() {
                                     @Override
                                     public void done(ParseException e) {
@@ -391,7 +401,9 @@ public class MainActivity extends ActionBarActivity {
                             // Create a new adapter to bind to our RecyclerView
                             mMovies.addAll(parseObjects);
                             MovieAdapter adapter = new MovieAdapter(mMovies);
-                            mRecyclerView.setAdapter(adapter);
+                            // Scale in, alpha in, and slide in from bottom new items
+                            mRecyclerView.setAdapter(new SlideInBottomAnimationAdapter(
+                                    new ScaleInAnimationAdapter(new AlphaInAnimationAdapter(adapter))));
                         } else {
                             // Add our results to what we already have
                             mMovies.addAll(parseObjects);

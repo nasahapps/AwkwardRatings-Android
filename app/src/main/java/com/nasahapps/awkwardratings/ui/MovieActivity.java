@@ -12,9 +12,16 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.AnimationSet;
+import android.view.animation.BounceInterpolator;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.ScaleAnimation;
+import android.view.animation.TranslateAnimation;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -75,7 +82,7 @@ public class MovieActivity extends ActionBarActivity {
 
     public static class MovieFragment extends Fragment {
 
-        private View mBackground;
+        private View mBackground, mSeparatorOne, mAwkwardLabel;
         private ImageView mBackdrop, mPoster;
         private TextView mTitle, mMoreInfo, mOverview;
         private Button mNotAwkwardButton, mAwkwardButton, mAwkwardness;
@@ -120,12 +127,26 @@ public class MovieActivity extends ActionBarActivity {
             mNotAwkwardButton = (Button) v.findViewById(R.id.notAwkwardButton);
             mAwkwardButton = (Button) v.findViewById(R.id.awkwardButton);
             mPlayTrailer = (ImageButton) v.findViewById(R.id.playTrailer);
+            mSeparatorOne = v.findViewById(R.id.separatorOne);
+            mAwkwardLabel = v.findViewById(R.id.awkwardLabel);
 
             EventBus.getDefault().register(this);
 
             if (savedInstanceState == null) {
                 getMovie();
             } else {
+                mNotAwkwardButton.setVisibility(View.VISIBLE);
+                mAwkwardness.setVisibility(View.VISIBLE);
+                mAwkwardButton.setVisibility(View.VISIBLE);
+                mTitle.setVisibility(View.VISIBLE);
+                mMoreInfo.setVisibility(View.VISIBLE);
+                mOverview.setVisibility(View.VISIBLE);
+                mSeparatorOne.setVisibility(View.VISIBLE);
+                mPoster.setVisibility(View.VISIBLE);
+                if (Utils.isPortrait(getActivity())) {
+                    // Only set the awkward label to visible if in portrait
+                    mAwkwardLabel.setVisibility(View.VISIBLE);
+                }
                 onEvent(mMovie);
             }
 
@@ -158,6 +179,11 @@ public class MovieActivity extends ActionBarActivity {
                     Uri uri = Uri.parse("https://image.tmdb.org/t/p/w300" + mMovie.getBackdropPath()
                             + "?api_key=" + NetworkHelper.getInstance(getActivity()).getApiKey());
                     Picasso.with(getActivity()).load(uri).into(mBackdrop);
+                } else {
+                    // Set the backdrop height to 48dp
+                    RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                            (int) Utils.dpToPixel(getResources(), 96));
+                    mBackdrop.setLayoutParams(lp);
                 }
                 if (mMovie.getPosterPath() != null) {
                     Uri uri = Uri.parse("https://image.tmdb.org/t/p/w150" + mMovie.getPosterPath()
@@ -187,6 +213,8 @@ public class MovieActivity extends ActionBarActivity {
 
                         }
                     });
+                } else {
+                    mPoster.setVisibility(View.GONE);
                 }
 
                 // Hide the play button if there is no trailer
@@ -199,6 +227,8 @@ public class MovieActivity extends ActionBarActivity {
                     mPlayTrailer.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
+                            // You're gonna need a YouTube API key to view YT vids, just so you know
+                            // https://developers.google.com/youtube/android/player/
                             Scanner s = new Scanner(getResources().openRawResource(R.raw.youtube));
                             try {
                                 String key = null;
@@ -330,6 +360,22 @@ public class MovieActivity extends ActionBarActivity {
                                         mAwkwardness.setText(percent + "%");
                                 }
                             });
+
+                            // Fade the poster in
+                            fadeAndSlideDownIn(mPoster, 0);
+                            // Pop the buttons in
+                            popIn(mNotAwkwardButton, 0);
+                            popIn(mAwkwardness, 100);
+                            if (Utils.isPortrait(getActivity()))
+                                // Only fade in the awkward label if in portrait
+                                fadeIn(mAwkwardLabel, 100);
+                            popIn(mAwkwardButton, 200);
+                            // And fade the text in
+                            fadeIn(mTitle, 0);
+                            fadeIn(mMoreInfo, 100);
+                            // And "draw" the line across
+                            lineAcross(mSeparatorOne, 100);
+                            fadeIn(mOverview, 200);
                         } else {
                             Utils.showError(getActivity(), TAG, "Error querying movie", e, e.getLocalizedMessage());
                         }
@@ -351,6 +397,59 @@ public class MovieActivity extends ActionBarActivity {
             Toast.makeText(getActivity(), error.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
             // Exit back to the list screen
             getActivity().finish();
+        }
+
+        /**
+         * Some quick little reusable animation functions
+         */
+
+        public void popIn(View v, long delay) {
+            if (v.getVisibility() != View.VISIBLE) {
+                v.setVisibility(View.VISIBLE);
+                ScaleAnimation anim = new ScaleAnimation(0f, 1f, 0f, 1f);
+                anim.setDuration(750);
+                anim.setStartOffset(delay);
+                anim.setInterpolator(new BounceInterpolator());
+                v.startAnimation(anim);
+            }
+        }
+
+        public void fadeIn(View v, long delay) {
+            if (v.getVisibility() != View.VISIBLE) {
+                v.setVisibility(View.VISIBLE);
+                AlphaAnimation anim = new AlphaAnimation(0f, 1f);
+                anim.setDuration(750);
+                anim.setStartOffset(delay);
+                anim.setInterpolator(new DecelerateInterpolator());
+                v.startAnimation(anim);
+            }
+        }
+
+        public void lineAcross(View v, long delay) {
+            if (v.getVisibility() != View.VISIBLE) {
+                v.setVisibility(View.VISIBLE);
+                ScaleAnimation anim = new ScaleAnimation(0f, 1f, 1f, 1f);
+                anim.setDuration(750);
+                anim.setStartOffset(delay);
+                anim.setInterpolator(new DecelerateInterpolator());
+                v.startAnimation(anim);
+            }
+        }
+
+        public void fadeAndSlideDownIn(View v, long delay) {
+            if (v.getVisibility() != View.VISIBLE) {
+                v.setVisibility(View.VISIBLE);
+                AnimationSet as = new AnimationSet(true);
+                AlphaAnimation alpha = new AlphaAnimation(0f, 1f);
+                TranslateAnimation trans = new TranslateAnimation(0f, 0f, -100f, 0f);
+
+                as.addAnimation(alpha);
+                as.addAnimation(trans);
+                as.setDuration(750);
+                as.setStartOffset(delay);
+                as.setInterpolator(new DecelerateInterpolator());
+                v.startAnimation(as);
+            }
         }
     }
 }

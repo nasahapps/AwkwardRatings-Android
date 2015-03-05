@@ -5,8 +5,11 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.nasahapps.awkwardratings.model.MovieRating;
 
+import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -61,7 +64,16 @@ public class PreferencesHelper {
      * App-specific save/load methods
      */
 
-    public void saveMovieRatings(Map<Number, MovieRating> ratings) {
+    public Map<Integer, MovieRating> loadMovieRatings() {
+        Type type = new TypeToken<Map<Integer, MovieRating>>() {
+        }.getType();
+        String json = mPrefs.getString(KEY_MOVIE_RATINGS, null);
+        if (json != null) {
+            return new Gson().fromJson(json, type);
+        } else return new HashMap<>();
+    }
+
+    public void saveMovieRatings(Map<Integer, MovieRating> ratings) {
         String json = new Gson().toJson(ratings);
         mPrefs.edit().putString(KEY_MOVIE_RATINGS, json).apply();
     }

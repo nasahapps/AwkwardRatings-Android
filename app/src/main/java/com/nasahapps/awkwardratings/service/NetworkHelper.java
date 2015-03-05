@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.nasahapps.awkwardratings.BuildConfig;
 import com.nasahapps.awkwardratings.R;
+import com.nasahapps.awkwardratings.model.Movie;
 import com.nasahapps.awkwardratings.service.response.PopularMovieResponse;
 
 import java.util.Scanner;
@@ -15,6 +16,7 @@ import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
 import retrofit.http.GET;
+import retrofit.http.Path;
 import retrofit.http.Query;
 
 /**
@@ -28,6 +30,7 @@ public class NetworkHelper {
 
     private static final String MOVIE_DB_ENDPOINT = "https://api.themoviedb.org/3";
     private static final String MOVIES_POPULAR = "/movie/popular";
+    private static final String MOVIE_SPECIFIC = "/movie/{id}";
 
     private static NetworkHelper sInstance;
 
@@ -78,6 +81,21 @@ public class NetworkHelper {
         });
     }
 
+    public void getMovie(int id) {
+        mMovieDBClient.getMovie(id, mTMDBKey, "videos", new Callback<Movie>() {
+            @Override
+            public void success(Movie movie, Response response) {
+                EventBus.getDefault().post(movie);
+            }
+
+            @Override
+            public void failure(RetrofitError error) {
+                Log.e(TAG, "Error getting movie: " + error.getLocalizedMessage());
+                EventBus.getDefault().post(error);
+            }
+        });
+    }
+
     public String getApiKey() {
         return mTMDBKey;
     }
@@ -89,6 +107,15 @@ public class NetworkHelper {
                 @Query("api_key") String key,
                 @Query("page") int page,
                 Callback<PopularMovieResponse> cb
+        );
+
+        // Getting info on a specific movie
+        @GET(MOVIE_SPECIFIC)
+        void getMovie(
+                @Path("id") int id,
+                @Query("api_key") String key,
+                @Query("append_to_response") String append,
+                Callback<Movie> cb
         );
     }
 }

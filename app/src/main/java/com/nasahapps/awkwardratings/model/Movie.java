@@ -1,15 +1,19 @@
 package com.nasahapps.awkwardratings.model;
 
+import java.util.List;
+
 /**
  * Created by Hakeem on 2/28/15.
- *
+ * <p/>
  * Automatically deserialized with GSON by Retrofit
  */
 public class Movie {
 
     private boolean adult;
-    private String backdrop_path, original_title, title, release_date, poster_path;
-    private int id;
+    private String backdrop_path, original_title, title, release_date, poster_path, overview;
+    private int id, budget, revenue, runtime;
+    private List<Genre> genres;
+    private VideoResults videos;
 
     public boolean isAdult() {
         return adult;
@@ -37,5 +41,29 @@ public class Movie {
 
     public int getId() {
         return id;
+    }
+
+    public String getOverview() {
+        return overview;
+    }
+
+    public int getBudget() {
+        return budget;
+    }
+
+    public int getRevenue() {
+        return revenue;
+    }
+
+    public int getRuntime() {
+        return runtime;
+    }
+
+    public List<Genre> getGenres() {
+        return genres;
+    }
+
+    public VideoResults getVideos() {
+        return videos;
     }
 }

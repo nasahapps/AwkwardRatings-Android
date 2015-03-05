@@ -1,0 +1,130 @@
+<ScrollView
+    android:id="@+id/parentLayout"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:background="@color/dark_red"
+    tools:context="com.nasahapps.awkwardratings.ui.MovieActivity.MovieFragment">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/backdrop"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:scaleType="centerCrop"
+            tools:src="@drawable/backdrop"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/backdrop"
+            android:layout_marginTop="-40dp"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/poster"
+                    android:layout_width="108dp"
+                    android:layout_height="160dp"
+                    tools:src="@drawable/poster"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="40dp"
+                    android:orientation="vertical"
+                    android:paddingLeft="16dp"
+                    android:paddingRight="16dp">
+
+                    <TextView
+                        android:id="@+id/title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#fff"
+                        android:textSize="22sp"
+                        tools:text="The Amazing Spider-Man"/>
+
+                    <TextView
+                        android:id="@+id/moreInfo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#fff"
+                        android:textSize="15sp"
+                        tools:text="July 2012 \u00b7 136 minutes"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp">
+
+                <Button
+                    android:id="@+id/notAwkwardButton"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_toLeftOf="@+id/awkwardness"
+                    android:background="@drawable/transparent_circle"
+                    android:text="NOT"
+                    android:textColor="#fff"
+                    tools:background="@drawable/green_circle"/>
+
+                <Button
+                    android:id="@+id/awkwardness"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginLeft="32dp"
+                    android:layout_marginRight="32dp"
+                    android:background="@drawable/transparent_circle"
+                    android:textColor="#fff"
+                    tools:background="@drawable/green_circle"
+                    tools:text="86%"/>
+
+                <Button
+                    android:id="@+id/awkwardButton"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_toRightOf="@id/awkwardness"
+                    android:background="@drawable/transparent_circle"
+                    android:text="AWK"
+                    android:textColor="#fff"
+                    tools:background="@drawable/red_circle"/>
+
+            </RelativeLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginBottom="16dp"
+                android:layout_marginTop="16dp"
+                android:background="@color/off_white"/>
+
+            <TextView
+                android:id="@+id/overview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="#fff"
+                tools:text="Peter Parker is going back to high school in The Amazing Spider-Man (3D) as a teenager dealing with both contemporary human problems and amazing super-human crises."/>
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</ScrollView>

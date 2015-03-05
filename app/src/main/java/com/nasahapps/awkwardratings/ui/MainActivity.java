@@ -1,5 +1,6 @@
 package com.nasahapps.awkwardratings.ui;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -9,7 +10,6 @@ import android.support.v7.app.ActionBarActivity;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,8 +17,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.malinskiy.superrecyclerview.OnMoreListener;
 import com.malinskiy.superrecyclerview.SuperRecyclerView;
 import com.nasahapps.awkwardratings.PreferencesHelper;
@@ -26,6 +24,7 @@ import com.nasahapps.awkwardratings.R;
 import com.nasahapps.awkwardratings.Utils;
 import com.nasahapps.awkwardratings.model.MovieRating;
 import com.nasahapps.awkwardratings.service.NetworkHelper;
+import com.nasahapps.awkwardratings.service.VoteHelper;
 import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseObject;
@@ -33,9 +32,7 @@ import com.parse.ParseQuery;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -59,7 +56,7 @@ public class MainActivity extends ActionBarActivity {
 
         private SuperRecyclerView mRecyclerView;
         private List<ParseObject> mMovies = new ArrayList<>();
-        private Map<Number, MovieRating> mMovieRatings = new HashMap<>();
+        private Map<Integer, MovieRating> mMovieRatings;
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -97,18 +94,22 @@ public class MainActivity extends ActionBarActivity {
             // Only get movies if this is the first time loading
             if (savedInstanceState == null) {
                 // Also load user's movie ratings from prefs
-                String json = PreferencesHelper.getInstance(getActivity())
-                        .getString(PreferencesHelper.KEY_MOVIE_RATINGS, null);
-                if (json != null) {
-                    Type type = new TypeToken<Map<Integer, MovieRating>>() {
-                    }.getType();
-                    mMovieRatings = new Gson().fromJson(json, type);
-                }
-
+                mMovieRatings = PreferencesHelper.getInstance(getActivity()).loadMovieRatings();
                 getMovies();
             }
 
             return v;
+        }
+
+        @Override
+        public void onResume() {
+            super.onResume();
+            // When coming back from a movie page, refresh the recycler view in case any votes
+            // were changed
+            mMovieRatings = PreferencesHelper.getInstance(getActivity()).loadMovieRatings();
+            if (mRecyclerView != null && mRecyclerView.getAdapter() != null) {
+                mRecyclerView.getAdapter().notifyDataSetChanged();
+            }
         }
 
         public void getMovies() {
@@ -163,9 +164,9 @@ public class MainActivity extends ActionBarActivity {
                 // Reset background to black when scrolling down
                 holder.itemView.setBackgroundColor(Color.BLACK);
                 // And set the button bgs depending on whether user voted or not for this movie
-                boolean hasRated = mMovieRatings.containsKey(movie.getNumber("movie_id"));
+                boolean hasRated = mMovieRatings.containsKey(movie.getNumber("movie_id").intValue());
                 if (hasRated) {
-                    MovieRating movieRating = mMovieRatings.get(movie.getNumber("movie_id"));
+                    MovieRating movieRating = mMovieRatings.get(movie.getNumber("movie_id").intValue());
                     if (movieRating.isAwkward()) {
                         holder.yesAwkward.setBackgroundResource(R.drawable.red_button_bg);
                         holder.noAwkward.setBackgroundResource(R.drawable.transparent_button_bg);
@@ -180,14 +181,11 @@ public class MainActivity extends ActionBarActivity {
 
                 holder.title.setText(movie.getString("title"));
 
-                Number yes = movie.getNumber("awkward_yes");
-                Number no = movie.getNumber("awkward_no");
-                if (yes.longValue() == 0 && no.longValue() == 0) {
+                long percent = VoteHelper.getVote(movie);
+                if (percent == -1)
                     holder.rating.setText("No rating");
-                } else {
-                    long percent = yes.longValue() * 100 / (yes.longValue() + no.longValue());
+                else
                     holder.rating.setText(percent + "% awkward");
-                }
 
                 if (movie.getString("poster_path") != null) {
                     final View background = holder.itemView;
@@ -216,8 +214,42 @@ public class MainActivity extends ActionBarActivity {
                 // To keep track of which movie we're referring to when we press the yes/no buttons
                 holder.yesAwkward.setTag(position);
                 holder.noAwkward.setTag(position);
-                setVoteClickListener(holder.yesAwkward, true);
-                setVoteClickListener(holder.noAwkward, false);
+                holder.yesAwkward.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        int position = (Integer) v.getTag();
+                        ParseObject movie = mMovies.get(position);
+                        VoteHelper.vote(getActivity(), movie, true, mMovieRatings);
+                        // Finally, update our buttons
+                        mRecyclerView.getAdapter().notifyItemChanged(position);
+                    }
+                });
+                holder.noAwkward.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        int position = (Integer) v.getTag();
+                        ParseObject movie = mMovies.get(position);
+                        VoteHelper.vote(getActivity(), movie, false, mMovieRatings);
+                        // Finally, update our buttons
+                        mRecyclerView.getAdapter().notifyItemChanged(position);
+                    }
+                });
+
+                //setVoteClickListener(holder.yesAwkward, true);
+                //setVoteClickListener(holder.noAwkward, false);
+
+                // And a click listener for the entire item itself to bring up a detailed movie page
+                holder.itemView.setTag(position);
+                holder.itemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        int position = (int) v.getTag();
+                        ParseObject movie = mMovies.get(position);
+                        Intent i = new Intent(getActivity(), MovieActivity.class);
+                        i.putExtra(MovieActivity.EXTRA_ID, movie.getNumber("movie_id").intValue());
+                        startActivity(i);
+                    }
+                });
             }
 
             @Override
@@ -225,6 +257,7 @@ public class MainActivity extends ActionBarActivity {
                 return movies.size();
             }
 
+            /*
             public void setVoteClickListener(View v, final boolean awkward) {
                 v.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -233,11 +266,11 @@ public class MainActivity extends ActionBarActivity {
                         ParseObject movie = mMovies.get(position);
                         String voteKey = awkward ? "awkward_yes" : "awkward_no";
 
-                        if (mMovieRatings.containsKey(movie.getNumber("movie_id"))) {
+                        if (mMovieRatings.containsKey(movie.getNumber("movie_id").intValue())) {
                             // User has voted on this movie before
                             // First check if user pressed the same vote button
                             // If so, unvote
-                            MovieRating movieRating = mMovieRatings.get(movie.getNumber("movie_id"));
+                            MovieRating movieRating = mMovieRatings.get(movie.getNumber("movie_id").intValue());
                             try {
                                 if (awkward == movieRating.isAwkward()) {
                                     // e.g. user voted yes before, now is unvoting yes
@@ -248,7 +281,7 @@ public class MainActivity extends ActionBarActivity {
                                     movie.saveInBackground();
 
                                     // Then remove this rating from the user's prefs
-                                    mMovieRatings.remove(movie.getNumber("movie_id"));
+                                    mMovieRatings.remove(movie.getNumber("movie_id").intValue());
                                     PreferencesHelper.getInstance(getActivity()).saveMovieRatings(mMovieRatings);
                                 } else {
                                     // e.g. user voted yes before, now is voting no
@@ -267,7 +300,7 @@ public class MainActivity extends ActionBarActivity {
 
                                     // Then change the rating to the user
                                     movieRating.setAwkward(awkward);
-                                    mMovieRatings.put(movie.getNumber("movie_id"), movieRating);
+                                    mMovieRatings.put(movie.getNumber("movie_id").intValue(), movieRating);
                                     PreferencesHelper.getInstance(getActivity()).saveMovieRatings(mMovieRatings);
                                 }
 
@@ -292,7 +325,7 @@ public class MainActivity extends ActionBarActivity {
                                 MovieRating movieRating = new MovieRating(movie.getNumber("movie_id"), awkward);
 
                                 // Then add it to the user's map of movie ratings
-                                mMovieRatings.put(movie.getNumber("movie_id"), movieRating);
+                                mMovieRatings.put(movie.getNumber("movie_id").intValue(), movieRating);
                                 PreferencesHelper.getInstance(getActivity()).saveMovieRatings(mMovieRatings);
                             } catch (Exception e) {
                                 Log.e(TAG, "Error fetching Movie object", e);
@@ -308,6 +341,7 @@ public class MainActivity extends ActionBarActivity {
                     }
                 });
             }
+            */
 
             public class ViewHolder extends RecyclerView.ViewHolder {
                 public TextView title, rating;

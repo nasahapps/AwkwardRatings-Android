@@ -1,11 +1,11 @@
-package com.nasahapps.awkwardratings.ui;
+package com.nasahapps.awkwardratings.ui.custom;
 
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 
 /**
  * Created by Hakeem on 3/1/15.
- *
+ * <p/>
  * Helper class for allowing the top Toolbar to hide when scrolling down and reappear when
  * scrolling back up.
  */

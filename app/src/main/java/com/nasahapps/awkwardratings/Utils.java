@@ -11,7 +11,6 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -143,8 +142,20 @@ public class Utils {
     }
 
     public static void animateToColor(View v, int color) {
+        /*
         ValueAnimator colorAnim = ObjectAnimator.ofInt(v, "backgroundColor",
                 ((ColorDrawable) v.getBackground()).getColor(), color);
+        colorAnim.setDuration(250);
+        colorAnim.setEvaluator(new ArgbEvaluator());
+        colorAnim.setInterpolator(new DecelerateInterpolator());
+        colorAnim.start();
+        */
+        v.setBackgroundColor(color);
+    }
+
+    public static void animateFromBlackToColor(View v, int color) {
+        ValueAnimator colorAnim = ObjectAnimator.ofInt(v, "backgroundColor",
+                0xff000000, color);
         colorAnim.setDuration(250);
         colorAnim.setEvaluator(new ArgbEvaluator());
         colorAnim.setInterpolator(new DecelerateInterpolator());

@@ -20,6 +20,7 @@
         android:layout_height="match_parent"
         android:layout_marginTop="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
+        android:divider="@null"
         android:visibility="gone"/>
 
 </FrameLayout>

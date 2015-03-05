@@ -1,7 +1,8 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
              xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
+             android:animateLayoutChanges="true"
              tools:context=".MainActivity$MainFragment">
 
     <com.malinskiy.superrecyclerview.SuperRecyclerView
@@ -20,4 +21,13 @@
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"/>
 
-</FrameLayout>
+    <ListView
+        android:id="@+id/searchListView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/toolbar"
+        android:background="?attr/colorPrimary"
+        android:divider="@null"
+        android:visibility="gone"/>
+
+</RelativeLayout>

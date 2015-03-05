@@ -24,6 +24,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -43,9 +44,11 @@ import com.nasahapps.awkwardratings.service.VoteHelper;
 import com.nasahapps.awkwardratings.service.response.MovieResponse;
 import com.nasahapps.awkwardratings.ui.custom.HidingScrollListener;
 import com.parse.FindCallback;
+import com.parse.GetCallback;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
+import com.parse.SaveCallback;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
@@ -63,121 +66,15 @@ public class MainActivity extends ActionBarActivity {
 
     private final static String TAG = MainActivity.class.getSimpleName();
 
-    // Using a ListView instead of RecyclerView because I've had problems in the past
-    // with RecyclerViews crashing whenever its parent layout in XML has
-    // android:animateLayoutChanges="true". ListViews don't have this problem
-    // Plus, we'll only be showing at most 20 movies per search query so
-    // large scale lists are not a problem here
-    private ListView mListView;
-    private List<Movie> mSearchedMovies = new ArrayList<>();
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.container, new MainFragment())
                     .commit();
         }
-
-        mListView = (ListView) findViewById(R.id.searchListView);
-
-        EventBus.getDefault().register(this);
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        if (!EventBus.getDefault().isRegistered(this))
-            EventBus.getDefault().register(this);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (EventBus.getDefault().isRegistered(this))
-            EventBus.getDefault().unregister(this);
-    }
-
-    /**
-     * Used for adding search functionality
-     * where MainActivity is our main search Activity
-     */
-
-    @Override
-    protected void onNewIntent(Intent intent) {
-        if (intent.getAction().equals(Intent.ACTION_SEARCH)) {
-            // Handle a search
-            String query = intent.getStringExtra(SearchManager.QUERY);
-            Log.d(TAG, "Query onNewIntent is " + query);
-        } else {
-            super.onNewIntent(intent);
-        }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the options menu from XML
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_main, menu);
-
-        // Get the SearchView and set the searchable config
-        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        final SearchView searchView = (SearchView) menu.findItem(R.id.searchMenuItem).getActionView();
-        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-        searchView.setIconifiedByDefault(true); // Show as an icon by default
-
-        MenuItem searchItem = menu.findItem(R.id.searchMenuItem);
-        // This was added because some devices wouldn't get rid of the SearchListView
-        // when the back button was clicked. This fixes that.
-        MenuItemCompat.setOnActionExpandListener(searchItem, new MenuItemCompat.OnActionExpandListener() {
-            @Override
-            public boolean onMenuItemActionExpand(MenuItem menuItem) {
-                mListView.setVisibility(View.VISIBLE);
-                return true;
-            }
-
-            @Override
-            public boolean onMenuItemActionCollapse(MenuItem menuItem) {
-                searchView.setQuery("", false);
-                mListView.setAdapter(null);
-                mListView.setVisibility(View.GONE);
-                return true;
-            }
-        });
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String s) {
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String s) {
-                if (s.equals("")) {
-                    mListView.setAdapter(null);
-                } else {
-                    Log.d(TAG, "Query from onQueryTextChange is " + s);
-                    NetworkHelper.getInstance(MainActivity.this).searchMovie(s);
-                }
-
-                return true;
-            }
-        });
-
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    public void onEvent(MovieResponse response) {
-        if (response.getResults() != null) {
-            mSearchedMovies = response.getResults();
-            SearchMovieAdapter adapter = new SearchMovieAdapter(this, mSearchedMovies);
-            mListView.setAdapter(adapter);
-        }
-    }
-
-    public void onEvent(RetrofitError error) {
-        Toast.makeText(this, error.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
     }
 
     public static class MainFragment extends Fragment {
@@ -189,12 +86,22 @@ public class MainActivity extends ActionBarActivity {
         // For when we return from MovieActivity, we know which view in RecyclerView to
         // refresh in case user voted on that page
         private int mLastPosition;
+        // Using a ListView instead of RecyclerView because I've had problems in the past
+        // with RecyclerViews crashing whenever its parent layout in XML has
+        // android:animateLayoutChanges="true". ListViews don't have this problem
+        // Plus, we'll only be showing at most 20 movies per search query so
+        // large scale lists are not a problem here
+        private ListView mSearchListView;
+        private List<Movie> mSearchedMovies;
+        private Menu mMenu;
+        private String mLastQuery;
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View v = inflater.inflate(R.layout.fragment_main, container, false);
             setRetainInstance(true);
+            setHasOptionsMenu(true);
 
             mToolbar = (Toolbar) v.findViewById(R.id.toolbar);
             ((ActionBarActivity) getActivity()).setSupportActionBar(mToolbar);
@@ -241,6 +148,89 @@ public class MainActivity extends ActionBarActivity {
                 mRecyclerView.setAdapter(adapter);
             }
 
+            // The ListView holding our search results
+            mSearchListView = (ListView) v.findViewById(R.id.searchListView);
+            // Repopulate the listview if user rotated the device
+            if (mSearchedMovies != null) {
+                SearchMovieAdapter adapter = new SearchMovieAdapter(getActivity(), mSearchedMovies);
+                mSearchListView.setAdapter(adapter);
+                mSearchListView.setVisibility(View.VISIBLE);
+            }
+            mSearchListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    // When item is clicked, first check if the movie the user wants to see is in our
+                    // Parse DB
+                    final Movie m = mSearchedMovies.get(position);
+                    ParseQuery<ParseObject> query = ParseQuery.getQuery("Movie");
+                    query.whereEqualTo("movie_id", m.getId());
+                    query.getFirstInBackground(new GetCallback<ParseObject>() {
+                        @Override
+                        public void done(ParseObject parseObject, ParseException e) {
+                            if (e == null) {
+                                if (parseObject != null) {
+                                    // We have this movie in our database, proceed
+                                    Intent i = new Intent(getActivity(), MovieActivity.class);
+                                    i.putExtra(MovieActivity.EXTRA_ID, m.getId());
+                                    startActivity(i);
+                                } else {
+                                    // Add this movie to our database so users can vote on it
+                                    ParseObject movie = new ParseObject("Movie");
+                                    movie.put("adult", m.isAdult());
+                                    movie.put("backdrop_path", m.getBackdropPath());
+                                    movie.put("movie_id", m.getId());
+                                    movie.put("original_title", m.getOriginalTitle());
+                                    movie.put("release_date", m.getReleaseDate());
+                                    movie.put("poster_path", m.getPosterPath());
+                                    movie.put("title", m.getTitle());
+                                    movie.saveInBackground(new SaveCallback() {
+                                        @Override
+                                        public void done(ParseException e) {
+                                            // If everything went well, then open up the movie page
+                                            if (e == null) {
+                                                Intent i = new Intent(getActivity(), MovieActivity.class);
+                                                i.putExtra(MovieActivity.EXTRA_ID, m.getId());
+                                                startActivity(i);
+                                            } else {
+                                                Utils.showError(getActivity(), TAG, "Error saving new movie", e,
+                                                        e.getLocalizedMessage());
+                                            }
+                                        }
+                                    });
+                                }
+                            } else {
+                                Log.e(TAG, "Error querying movies", e);
+                                // Add this movie to our database so users can vote on it
+                                ParseObject movie = new ParseObject("Movie");
+                                movie.put("adult", m.isAdult());
+                                movie.put("backdrop_path", m.getBackdropPath());
+                                movie.put("movie_id", m.getId());
+                                movie.put("original_title", m.getOriginalTitle());
+                                movie.put("release_date", m.getReleaseDate());
+                                movie.put("poster_path", m.getPosterPath());
+                                movie.put("title", m.getTitle());
+                                movie.saveInBackground(new SaveCallback() {
+                                    @Override
+                                    public void done(ParseException e) {
+                                        // If everything went well, then open up the movie page
+                                        if (e == null) {
+                                            Intent i = new Intent(getActivity(), MovieActivity.class);
+                                            i.putExtra(MovieActivity.EXTRA_ID, m.getId());
+                                            startActivity(i);
+                                        } else {
+                                            Utils.showError(getActivity(), TAG, "Error saving new movie", e,
+                                                    e.getLocalizedMessage());
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+
+            EventBus.getDefault().register(this);
+
             // Only get movies if this is the first time loading
             if (savedInstanceState == null) {
                 // Also load user's movie ratings from prefs
@@ -252,6 +242,13 @@ public class MainActivity extends ActionBarActivity {
         }
 
         @Override
+        public void onStart() {
+            super.onStart();
+            if (!EventBus.getDefault().isRegistered(this))
+                EventBus.getDefault().register(this);
+        }
+
+        @Override
         public void onResume() {
             super.onResume();
             // When coming back from a movie page, refresh the recycler view in case any votes
@@ -260,6 +257,80 @@ public class MainActivity extends ActionBarActivity {
             if (mRecyclerView != null && mRecyclerView.getAdapter() != null) {
                 mRecyclerView.getAdapter().notifyItemChanged(mLastPosition);
             }
+        }
+
+        @Override
+        public void onStop() {
+            super.onStop();
+            if (EventBus.getDefault().isRegistered(this))
+                EventBus.getDefault().unregister(this);
+        }
+
+        @Override
+        public void onPrepareOptionsMenu(Menu menu) {
+            // If user was searching and rotated, make sure the search bar is still expanded
+            if (mMenu != null && mSearchedMovies != null) {
+                MenuItem searchItem = mMenu.findItem(R.id.searchMenuItem);
+                searchItem.expandActionView();
+                SearchView searchView = (SearchView) menu.findItem(R.id.searchMenuItem).getActionView();
+                searchView.setQuery(mLastQuery, false);
+            }
+            super.onPrepareOptionsMenu(menu);
+        }
+
+        @Override
+        public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+            // Inflate the options menu from XML
+            inflater.inflate(R.menu.menu_main, menu);
+            mMenu = menu;
+
+            // Get the SearchView and set the searchable config
+            SearchManager searchManager = (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
+            final SearchView searchView = (SearchView) menu.findItem(R.id.searchMenuItem).getActionView();
+            searchView.setSearchableInfo(searchManager.getSearchableInfo(getActivity().getComponentName()));
+            searchView.setIconifiedByDefault(true); // Show as an icon by default
+            searchView.setQueryHint("Search movies"); // For some reason, setting this in xml doesn't work
+            searchView.setQuery(mLastQuery, false);
+
+            MenuItem searchItem = menu.findItem(R.id.searchMenuItem);
+            // This was added because some devices wouldn't get rid of the SearchListView
+            // when the back button was clicked. This fixes that.
+            MenuItemCompat.setOnActionExpandListener(searchItem, new MenuItemCompat.OnActionExpandListener() {
+                @Override
+                public boolean onMenuItemActionExpand(MenuItem menuItem) {
+                    mSearchListView.setVisibility(View.VISIBLE);
+                    return true;
+                }
+
+                @Override
+                public boolean onMenuItemActionCollapse(MenuItem menuItem) {
+                    //searchView.setQuery("", false);
+                    mSearchListView.setAdapter(null);
+                    mSearchListView.setVisibility(View.GONE);
+                    mSearchedMovies = null;
+                    return true;
+                }
+            });
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextSubmit(String s) {
+                    return false;
+                }
+
+                @Override
+                public boolean onQueryTextChange(String s) {
+                    if (s.equals("")) {
+                        mSearchListView.setAdapter(null);
+                    } else {
+                        mLastQuery = s;
+                        NetworkHelper.getInstance(getActivity()).searchMovie(s);
+                    }
+
+                    return true;
+                }
+            });
+
+            super.onCreateOptionsMenu(menu, inflater);
         }
 
         public void getMovies() {
@@ -292,6 +363,22 @@ public class MainActivity extends ActionBarActivity {
                     }
                 }
             });
+        }
+
+        /**
+         * Used with EventBus
+         */
+
+        public void onEvent(MovieResponse response) {
+            if (response.getResults() != null) {
+                mSearchedMovies = response.getResults();
+                SearchMovieAdapter adapter = new SearchMovieAdapter(getActivity(), mSearchedMovies);
+                mSearchListView.setAdapter(adapter);
+            }
+        }
+
+        public void onEvent(RetrofitError error) {
+            Toast.makeText(getActivity(), error.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
         }
 
         public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> {
@@ -423,65 +510,66 @@ public class MainActivity extends ActionBarActivity {
                 }
             }
         }
-    }
 
-    // Using a different adapter other than MainFragment.MovieAdapter to keep this implementation simple
-    // Plus it uses a different layout
-    public class SearchMovieAdapter extends ArrayAdapter<Movie> {
-        public SearchMovieAdapter(Context c, List<Movie> movies) {
-            super(c, 0, movies);
-        }
 
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            if (convertView == null) {
-                convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_movie_search, parent, false);
+        // Using a different adapter other than MainFragment.MovieAdapter to keep this implementation simple
+        // Plus it uses a different layout
+        public class SearchMovieAdapter extends ArrayAdapter<Movie> {
+            public SearchMovieAdapter(Context c, List<Movie> movies) {
+                super(c, 0, movies);
             }
 
-            Movie m = getItem(position);
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                if (convertView == null) {
+                    convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_movie_search, parent, false);
+                }
 
-            TextView title = (TextView) convertView.findViewById(R.id.title);
-            title.setText(m.getTitle());
+                Movie m = getItem(position);
 
-            TextView releaseDate = (TextView) convertView.findViewById(R.id.releaseDate);
-            releaseDate.setVisibility(View.VISIBLE);
-            try {
-                if (m.getReleaseDate() != null && !m.getReleaseDate().isEmpty()) {
-                    SimpleDateFormat originalFormat = new SimpleDateFormat("yyyy-MM-dd");
-                    Date date = originalFormat.parse(m.getReleaseDate());
-                    SimpleDateFormat newFormat = new SimpleDateFormat("MMMM yyyy");
-                    releaseDate.setText(newFormat.format(date));
-                } else {
+                TextView title = (TextView) convertView.findViewById(R.id.title);
+                title.setText(m.getTitle());
+
+                TextView releaseDate = (TextView) convertView.findViewById(R.id.releaseDate);
+                releaseDate.setVisibility(View.VISIBLE);
+                try {
+                    if (m.getReleaseDate() != null && !m.getReleaseDate().isEmpty()) {
+                        SimpleDateFormat originalFormat = new SimpleDateFormat("yyyy-MM-dd");
+                        Date date = originalFormat.parse(m.getReleaseDate());
+                        SimpleDateFormat newFormat = new SimpleDateFormat("MMMM yyyy");
+                        releaseDate.setText(newFormat.format(date));
+                    } else {
+                        releaseDate.setVisibility(View.GONE);
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error parsing date", e);
                     releaseDate.setVisibility(View.GONE);
                 }
-            } catch (Exception e) {
-                Log.e(TAG, "Error parsing date", e);
-                releaseDate.setVisibility(View.GONE);
+
+                final ImageView poster = (ImageView) convertView.findViewById(R.id.poster);
+                final View background = convertView;
+                Uri uri = Uri.parse("https://image.tmdb.org/t/p/w150" + m.getPosterPath()
+                        + "?api_key=" + NetworkHelper.getInstance(getContext()).getApiKey());
+                Picasso.with(getContext()).load(uri).into(poster, new Callback() {
+                    @Override
+                    public void onSuccess() {
+                        Palette.generateAsync(Utils.getImageViewBitmap(poster), new Palette.PaletteAsyncListener() {
+                            @Override
+                            public void onGenerated(Palette p) {
+                                int color = p.getDarkMutedColor(p.getMutedColor(p.getDarkVibrantColor(0xff000000)));
+                                Utils.animateToColor(background, color);
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError() {
+
+                    }
+                });
+
+                return convertView;
             }
-
-            final ImageView poster = (ImageView) convertView.findViewById(R.id.poster);
-            final View background = convertView;
-            Uri uri = Uri.parse("https://image.tmdb.org/t/p/w150" + m.getPosterPath()
-                    + "?api_key=" + NetworkHelper.getInstance(getContext()).getApiKey());
-            Picasso.with(getContext()).load(uri).into(poster, new Callback() {
-                @Override
-                public void onSuccess() {
-                    Palette.generateAsync(Utils.getImageViewBitmap(poster), new Palette.PaletteAsyncListener() {
-                        @Override
-                        public void onGenerated(Palette p) {
-                            int color = p.getDarkMutedColor(p.getMutedColor(p.getDarkVibrantColor(0xff000000)));
-                            Utils.animateToColor(background, color);
-                        }
-                    });
-                }
-
-                @Override
-                public void onError() {
-
-                }
-            });
-
-            return convertView;
         }
     }
 }

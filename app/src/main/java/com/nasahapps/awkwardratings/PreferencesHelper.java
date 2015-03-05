@@ -60,6 +60,10 @@ public class PreferencesHelper {
         return mPrefs.getString(key, def);
     }
 
+    public void removeKey(String key) {
+        mPrefs.edit().remove(key).apply();
+    }
+
     /**
      * App-specific save/load methods
      */

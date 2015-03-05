@@ -62,6 +62,9 @@ public class MainActivity extends ActionBarActivity {
         private List<ParseObject> mMovies = new ArrayList<>();
         private Map<Integer, MovieRating> mMovieRatings;
         private Toolbar mToolbar;
+        // For when we return from MovieActivity, we know which view in RecyclerView to
+        // refresh in case user voted on that page
+        private int mLastPosition;
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -131,7 +134,7 @@ public class MainActivity extends ActionBarActivity {
             // were changed
             mMovieRatings = PreferencesHelper.getInstance(getActivity()).loadMovieRatings();
             if (mRecyclerView != null && mRecyclerView.getAdapter() != null) {
-                mRecyclerView.getAdapter().notifyDataSetChanged();
+                mRecyclerView.getAdapter().notifyItemChanged(mLastPosition);
             }
         }
 
@@ -267,6 +270,7 @@ public class MainActivity extends ActionBarActivity {
                     @Override
                     public void onClick(View v) {
                         int position = (int) v.getTag();
+                        mLastPosition = position;
                         ParseObject movie = mMovies.get(position);
                         Intent i = new Intent(getActivity(), MovieActivity.class);
                         i.putExtra(MovieActivity.EXTRA_ID, movie.getNumber("movie_id").intValue());
@@ -279,92 +283,6 @@ public class MainActivity extends ActionBarActivity {
             public int getItemCount() {
                 return movies.size();
             }
-
-            /*
-            public void setVoteClickListener(View v, final boolean awkward) {
-                v.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        int position = (int) v.getTag();
-                        ParseObject movie = mMovies.get(position);
-                        String voteKey = awkward ? "awkward_yes" : "awkward_no";
-
-                        if (mMovieRatings.containsKey(movie.getNumber("movie_id").intValue())) {
-                            // User has voted on this movie before
-                            // First check if user pressed the same vote button
-                            // If so, unvote
-                            MovieRating movieRating = mMovieRatings.get(movie.getNumber("movie_id").intValue());
-                            try {
-                                if (awkward == movieRating.isAwkward()) {
-                                    // e.g. user voted yes before, now is unvoting yes
-                                    // First decrement a vote for this movie
-                                    if (movie.fetchIfNeeded().getNumber(voteKey) != null) {
-                                        movie.put(voteKey, movie.getNumber(voteKey).longValue() - 1);
-                                    }
-                                    movie.saveInBackground();
-
-                                    // Then remove this rating from the user's prefs
-                                    mMovieRatings.remove(movie.getNumber("movie_id").intValue());
-                                    PreferencesHelper.getInstance(getActivity()).saveMovieRatings(mMovieRatings);
-                                } else {
-                                    // e.g. user voted yes before, now is voting no
-                                    // First decrement the original vote for this movie
-                                    String otherKey = awkward ? "awkward_no" : "awkward_yes";
-                                    if (movie.fetchIfNeeded().getNumber(otherKey) != null) {
-                                        movie.put(otherKey, movie.getNumber(otherKey).longValue() - 1);
-                                    }
-                                    // Then increment the new vote
-                                    if (movie.getNumber(voteKey) != null) {
-                                        movie.increment(voteKey);
-                                    } else {
-                                        movie.put(voteKey, 1);
-                                    }
-                                    movie.saveInBackground();
-
-                                    // Then change the rating to the user
-                                    movieRating.setAwkward(awkward);
-                                    mMovieRatings.put(movie.getNumber("movie_id").intValue(), movieRating);
-                                    PreferencesHelper.getInstance(getActivity()).saveMovieRatings(mMovieRatings);
-                                }
-
-                                // Finally, update our buttons
-                                mRecyclerView.getAdapter().notifyItemChanged(position);
-                            } catch (Exception e) {
-                                Log.e(TAG, "Error fetching MovieRating or Movie object", e);
-                            }
-                        } else {
-                            // User hasn't voted on this movie before
-                            // So first increment a vote for this movie
-                            try {
-                                if (movie.fetchIfNeeded().getNumber(voteKey) != null) {
-                                    movie.increment(voteKey);
-                                } else {
-                                    movie.put(voteKey, 1);
-                                }
-                                movie.saveInBackground();
-
-                                // Then save this rating to the user
-                                // Make the MovieRating object
-                                MovieRating movieRating = new MovieRating(movie.getNumber("movie_id"), awkward);
-
-                                // Then add it to the user's map of movie ratings
-                                mMovieRatings.put(movie.getNumber("movie_id").intValue(), movieRating);
-                                PreferencesHelper.getInstance(getActivity()).saveMovieRatings(mMovieRatings);
-                            } catch (Exception e) {
-                                Log.e(TAG, "Error fetching Movie object", e);
-                            }
-
-                            // Then finally, let's update our buttons
-                            try {
-                                mRecyclerView.getAdapter().notifyItemChanged(position);
-                            } catch (Exception e) {
-                                Log.e(TAG, "Error notifying item changed at position " + position);
-                            }
-                        }
-                    }
-                });
-            }
-            */
 
             public class ViewHolder extends RecyclerView.ViewHolder {
                 public TextView title, rating;

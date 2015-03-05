@@ -165,6 +165,14 @@ public class MovieActivity extends ActionBarActivity {
                     Picasso.with(getActivity()).load(uri).into(mPoster, new Callback() {
                         @Override
                         public void onSuccess() {
+                            mPoster.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    Intent i = new Intent(getActivity(), PosterActivity.class);
+                                    i.putExtra(PosterActivity.EXTRA_URL, mMovie.getPosterPath());
+                                    startActivity(i);
+                                }
+                            });
                             Palette.generateAsync(Utils.getImageViewBitmap(mPoster), new Palette.PaletteAsyncListener() {
                                 @Override
                                 public void onGenerated(Palette p) {

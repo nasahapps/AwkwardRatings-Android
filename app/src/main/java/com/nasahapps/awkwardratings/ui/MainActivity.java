@@ -59,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 
 import de.greenrobot.event.EventBus;
+import de.psdev.licensesdialog.LicensesDialog;
 import retrofit.RetrofitError;
 
 
@@ -344,6 +345,28 @@ public class MainActivity extends ActionBarActivity {
             });
 
             super.onCreateOptionsMenu(menu, inflater);
+        }
+
+        @Override
+        public boolean onOptionsItemSelected(MenuItem item) {
+            switch (item.getItemId()) {
+                case R.id.github:
+                    // Open the Github to view this app's source code
+                    Intent i = new Intent(Intent.ACTION_VIEW);
+                    i.setData(Uri.parse("https://github.com/nasahapps/AwkwardRatings-Android"));
+                    if (i.resolveActivity(getActivity().getPackageManager()) != null) {
+                        startActivity(i);
+                    } else {
+                        Toast.makeText(getActivity(), "No web browser installed", Toast.LENGTH_SHORT).show();
+                    }
+                    return true;
+                case R.id.openSource:
+                    // Open a dialog to give credit to 3rd-party libraries
+                    new LicensesDialog.Builder(getActivity()).setNotices(R.raw.notices).build().show();
+                    return true;
+                default:
+                    return super.onOptionsItemSelected(item);
+            }
         }
 
         /**

@@ -36,4 +36,8 @@ dependencies {
     compile 'de.greenrobot:eventbus:2.4.0'
     // GSON
     compile 'com.google.code.gson:gson:2.3.1'
+    // Helper for showing licenses in a dialog
+    compile('de.psdev.licensesdialog:licensesdialog:1.6.0') {
+        exclude module: 'support-v4'
+    }
 }

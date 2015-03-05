@@ -1,0 +1,44 @@
+<notices>
+    <notice>
+        <name>EventBus</name>
+        <url>https://github.com/greenrobot/EventBus</url>
+        <copyright>Copyright 2012 Markus Junginger</copyright>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
+        <name>Retrofit</name>
+        <url>http://square.github.io/retrofit</url>
+        <copyright>Copyright 2013 Square, Inc.</copyright>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
+        <name>Parse</name>
+        <url>https://www.parse.com</url>
+        <copyright/>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
+        <name>Picasso</name>
+        <url>http://square.github.io/picasso</url>
+        <copyright>Copyright 2013 Square, Inc.</copyright>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
+        <name>LicensesDialog</name>
+        <url>http://psdev.de/LicensesDialog</url>
+        <copyright>Copyright 2013 Philip Schiffer</copyright>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
+        <name>SuperRecyclerView</name>
+        <url>https://github.com/Malinskiy/SuperRecyclerView</url>
+        <copyright>Copyright 2014 Anton Malinskiy</copyright>
+        <license>Apache Software License 2.0</license>
+    </notice>
+    <notice>
+        <name>Gson</name>
+        <url>https://code.google.com/p/google-gson/</url>
+        <copyright>Copyright 2008-2009 Google Inc.</copyright>
+        <license>Apache Software License 2.0</license>
+    </notice>
+</notices>

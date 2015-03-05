@@ -24,7 +24,8 @@ dependencies {
     // AppCompat v7
     compile 'com.android.support:appcompat-v7:21.0.3'
     // Palette
-    compile 'com.android.support:palette-v7:21.0.3'
+    compile 'com.android.support:palette-v7:21.0.3'// Parse
+    compile 'com.parse.bolts:bolts-android:1.+'
     // Super RecyclerView
     compile 'com.malinskiy:superrecyclerview:1.1.0'
     // Picasso (Square)
@@ -33,4 +34,6 @@ dependencies {
     compile 'com.squareup.retrofit:retrofit:1.9.0'
     // EventBus
     compile 'de.greenrobot:eventbus:2.4.0'
+    // GSON
+    compile 'com.google.code.gson:gson:2.3.1'
 }

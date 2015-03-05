@@ -41,4 +41,27 @@
 
     </LinearLayout>
 
+    <LinearLayout
+        android:layout_width="68dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/awkwardButton"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/transparent_button_bg"
+            android:text="AWK"/>
+
+        <Button
+            android:id="@+id/notAwkwardButton"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/transparent_button_bg"
+            android:text="NOT"/>
+
+    </LinearLayout>
+
 </LinearLayout>

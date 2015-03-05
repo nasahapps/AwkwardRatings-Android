@@ -1,8 +1,8 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:tools="http://schemas.android.com/tools"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                tools:context=".MainActivity$MainFragment">
+             xmlns:tools="http://schemas.android.com/tools"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             tools:context=".MainActivity$MainFragment">
 
     <com.malinskiy.superrecyclerview.SuperRecyclerView
         android:id="@+id/list"
@@ -11,15 +11,13 @@
         android:layout_height="match_parent"
         app:layout_empty="@layout/empty_no_movies"
         app:layout_moreProgress="@layout/progress"
-        app:recyclerClipToPadding="false"/>
-    app:recyclerPaddingTop="?attr/actionBarSize"/>
+        app:recyclerClipToPadding="false"
+        app:recyclerPaddingTop="?attr/actionBarSize"/>
 
-    <!--
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"/>
-        -->
 
 </FrameLayout>

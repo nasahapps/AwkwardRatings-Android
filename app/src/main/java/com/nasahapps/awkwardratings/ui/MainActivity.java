@@ -10,9 +10,12 @@ import android.support.v7.app.ActionBarActivity;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -25,6 +28,7 @@ import com.nasahapps.awkwardratings.Utils;
 import com.nasahapps.awkwardratings.model.MovieRating;
 import com.nasahapps.awkwardratings.service.NetworkHelper;
 import com.nasahapps.awkwardratings.service.VoteHelper;
+import com.nasahapps.awkwardratings.ui.custom.HidingScrollListener;
 import com.parse.FindCallback;
 import com.parse.ParseException;
 import com.parse.ParseObject;
@@ -57,6 +61,7 @@ public class MainActivity extends ActionBarActivity {
         private SuperRecyclerView mRecyclerView;
         private List<ParseObject> mMovies = new ArrayList<>();
         private Map<Integer, MovieRating> mMovieRatings;
+        private Toolbar mToolbar;
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -64,9 +69,24 @@ public class MainActivity extends ActionBarActivity {
             View v = inflater.inflate(R.layout.fragment_main, container, false);
             setRetainInstance(true);
 
+            mToolbar = (Toolbar) v.findViewById(R.id.toolbar);
+            ((ActionBarActivity) getActivity()).setSupportActionBar(mToolbar);
+
             mRecyclerView = (SuperRecyclerView) v.findViewById(R.id.list);
             // Lay out in a linear fashion (ala ListView)
             mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+            // Our scroll listener to have it hide/show the Toolbar on scroll
+            mRecyclerView.setOnScrollListener(new HidingScrollListener() {
+                @Override
+                public void onHide() {
+                    mToolbar.animate().translationY(-mToolbar.getHeight()).setInterpolator(new AccelerateInterpolator(2));
+                }
+
+                @Override
+                public void onShow() {
+                    mToolbar.animate().translationY(0).setInterpolator(new DecelerateInterpolator(2));
+                }
+            });
             // Pull down to refresh list of movies
             mRecyclerView.setRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
                 @Override
@@ -78,6 +98,9 @@ public class MainActivity extends ActionBarActivity {
             mRecyclerView.setRefreshingColorResources(android.R.color.holo_orange_light,
                     android.R.color.holo_blue_light, android.R.color.holo_green_light,
                     android.R.color.holo_red_light);
+            // And have it not hidden under the Toolbar
+            mRecyclerView.getSwipeToRefresh().setProgressViewOffset(false, (int) Utils.dpToPixel(getResources(), 24),
+                    (int) Utils.dpToPixel(getResources(), 24 + 48));
             // When 10 items away from the end of the list, query for more
             mRecyclerView.setupMoreListener(new OnMoreListener() {
                 @Override

@@ -1,33 +1,46 @@
 package com.nasahapps.awkwardratings.ui;
 
+import android.app.SearchManager;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.malinskiy.superrecyclerview.OnMoreListener;
 import com.malinskiy.superrecyclerview.SuperRecyclerView;
 import com.nasahapps.awkwardratings.PreferencesHelper;
 import com.nasahapps.awkwardratings.R;
 import com.nasahapps.awkwardratings.Utils;
+import com.nasahapps.awkwardratings.model.Movie;
 import com.nasahapps.awkwardratings.model.MovieRating;
 import com.nasahapps.awkwardratings.service.NetworkHelper;
 import com.nasahapps.awkwardratings.service.VoteHelper;
+import com.nasahapps.awkwardratings.service.response.MovieResponse;
 import com.nasahapps.awkwardratings.ui.custom.HidingScrollListener;
 import com.parse.FindCallback;
 import com.parse.ParseException;
@@ -36,24 +49,135 @@ import com.parse.ParseQuery;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
+import de.greenrobot.event.EventBus;
+import retrofit.RetrofitError;
 
 
 public class MainActivity extends ActionBarActivity {
 
     private final static String TAG = MainActivity.class.getSimpleName();
 
+    // Using a ListView instead of RecyclerView because I've had problems in the past
+    // with RecyclerViews crashing whenever its parent layout in XML has
+    // android:animateLayoutChanges="true". ListViews don't have this problem
+    // Plus, we'll only be showing at most 20 movies per search query so
+    // large scale lists are not a problem here
+    private ListView mListView;
+    private List<Movie> mSearchedMovies = new ArrayList<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity);
+        setContentView(R.layout.activity_main);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.container, new MainFragment())
                     .commit();
         }
+
+        mListView = (ListView) findViewById(R.id.searchListView);
+
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (!EventBus.getDefault().isRegistered(this))
+            EventBus.getDefault().register(this);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (EventBus.getDefault().isRegistered(this))
+            EventBus.getDefault().unregister(this);
+    }
+
+    /**
+     * Used for adding search functionality
+     * where MainActivity is our main search Activity
+     */
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        if (intent.getAction().equals(Intent.ACTION_SEARCH)) {
+            // Handle a search
+            String query = intent.getStringExtra(SearchManager.QUERY);
+            Log.d(TAG, "Query onNewIntent is " + query);
+        } else {
+            super.onNewIntent(intent);
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the options menu from XML
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_main, menu);
+
+        // Get the SearchView and set the searchable config
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        final SearchView searchView = (SearchView) menu.findItem(R.id.searchMenuItem).getActionView();
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        searchView.setIconifiedByDefault(true); // Show as an icon by default
+
+        MenuItem searchItem = menu.findItem(R.id.searchMenuItem);
+        // This was added because some devices wouldn't get rid of the SearchListView
+        // when the back button was clicked. This fixes that.
+        MenuItemCompat.setOnActionExpandListener(searchItem, new MenuItemCompat.OnActionExpandListener() {
+            @Override
+            public boolean onMenuItemActionExpand(MenuItem menuItem) {
+                mListView.setVisibility(View.VISIBLE);
+                return true;
+            }
+
+            @Override
+            public boolean onMenuItemActionCollapse(MenuItem menuItem) {
+                searchView.setQuery("", false);
+                mListView.setAdapter(null);
+                mListView.setVisibility(View.GONE);
+                return true;
+            }
+        });
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String s) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String s) {
+                if (s.equals("")) {
+                    mListView.setAdapter(null);
+                } else {
+                    Log.d(TAG, "Query from onQueryTextChange is " + s);
+                    NetworkHelper.getInstance(MainActivity.this).searchMovie(s);
+                }
+
+                return true;
+            }
+        });
+
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    public void onEvent(MovieResponse response) {
+        if (response.getResults() != null) {
+            mSearchedMovies = response.getResults();
+            SearchMovieAdapter adapter = new SearchMovieAdapter(this, mSearchedMovies);
+            mListView.setAdapter(adapter);
+        }
+    }
+
+    public void onEvent(RetrofitError error) {
+        Toast.makeText(this, error.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
     }
 
     public static class MainFragment extends Fragment {
@@ -298,6 +422,66 @@ public class MainActivity extends ActionBarActivity {
                     noAwkward = (Button) v.findViewById(R.id.notAwkwardButton);
                 }
             }
+        }
+    }
+
+    // Using a different adapter other than MainFragment.MovieAdapter to keep this implementation simple
+    // Plus it uses a different layout
+    public class SearchMovieAdapter extends ArrayAdapter<Movie> {
+        public SearchMovieAdapter(Context c, List<Movie> movies) {
+            super(c, 0, movies);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if (convertView == null) {
+                convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_movie_search, parent, false);
+            }
+
+            Movie m = getItem(position);
+
+            TextView title = (TextView) convertView.findViewById(R.id.title);
+            title.setText(m.getTitle());
+
+            TextView releaseDate = (TextView) convertView.findViewById(R.id.releaseDate);
+            releaseDate.setVisibility(View.VISIBLE);
+            try {
+                if (m.getReleaseDate() != null && !m.getReleaseDate().isEmpty()) {
+                    SimpleDateFormat originalFormat = new SimpleDateFormat("yyyy-MM-dd");
+                    Date date = originalFormat.parse(m.getReleaseDate());
+                    SimpleDateFormat newFormat = new SimpleDateFormat("MMMM yyyy");
+                    releaseDate.setText(newFormat.format(date));
+                } else {
+                    releaseDate.setVisibility(View.GONE);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error parsing date", e);
+                releaseDate.setVisibility(View.GONE);
+            }
+
+            final ImageView poster = (ImageView) convertView.findViewById(R.id.poster);
+            final View background = convertView;
+            Uri uri = Uri.parse("https://image.tmdb.org/t/p/w150" + m.getPosterPath()
+                    + "?api_key=" + NetworkHelper.getInstance(getContext()).getApiKey());
+            Picasso.with(getContext()).load(uri).into(poster, new Callback() {
+                @Override
+                public void onSuccess() {
+                    Palette.generateAsync(Utils.getImageViewBitmap(poster), new Palette.PaletteAsyncListener() {
+                        @Override
+                        public void onGenerated(Palette p) {
+                            int color = p.getDarkMutedColor(p.getMutedColor(p.getDarkVibrantColor(0xff000000)));
+                            Utils.animateToColor(background, color);
+                        }
+                    });
+                }
+
+                @Override
+                public void onError() {
+
+                }
+            });
+
+            return convertView;
         }
     }
 }

@@ -9,7 +9,7 @@ import java.util.List;
  *
  * Automatically deserialized with GSON by Retrofit
  */
-public class PopularMovieResponse {
+public class MovieResponse {
 
     private int page, total_pages, total_results;
     private List<Movie> results;

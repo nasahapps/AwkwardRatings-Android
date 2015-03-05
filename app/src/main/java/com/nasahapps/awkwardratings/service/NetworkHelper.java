@@ -6,7 +6,7 @@ import android.util.Log;
 import com.nasahapps.awkwardratings.BuildConfig;
 import com.nasahapps.awkwardratings.R;
 import com.nasahapps.awkwardratings.model.Movie;
-import com.nasahapps.awkwardratings.service.response.PopularMovieResponse;
+import com.nasahapps.awkwardratings.service.response.MovieResponse;
 
 import java.util.Scanner;
 
@@ -31,6 +31,7 @@ public class NetworkHelper {
     private static final String MOVIE_DB_ENDPOINT = "https://api.themoviedb.org/3";
     private static final String MOVIES_POPULAR = "/movie/popular";
     private static final String MOVIE_SPECIFIC = "/movie/{id}";
+    private static final String SEARCH_MOVIE = "/search/movie";
 
     private static NetworkHelper sInstance;
 
@@ -68,10 +69,10 @@ public class NetworkHelper {
     }
 
     public void getPopularMovies(int page) {
-        mMovieDBClient.getPopularMovies(mTMDBKey, page, new Callback<PopularMovieResponse>() {
+        mMovieDBClient.getPopularMovies(mTMDBKey, page, new Callback<MovieResponse>() {
             @Override
-            public void success(PopularMovieResponse popularMovieResponse, Response response) {
-                EventBus.getDefault().post(popularMovieResponse);
+            public void success(MovieResponse movieResponse, Response response) {
+                EventBus.getDefault().post(movieResponse);
             }
 
             @Override
@@ -96,6 +97,21 @@ public class NetworkHelper {
         });
     }
 
+    public void searchMovie(String query) {
+        mMovieDBClient.searchMovie(mTMDBKey, query, new Callback<MovieResponse>() {
+            @Override
+            public void success(MovieResponse movieResponse, Response response) {
+                EventBus.getDefault().post(movieResponse);
+            }
+
+            @Override
+            public void failure(RetrofitError error) {
+                Log.e(TAG, "Error searching movies: " + error.getLocalizedMessage());
+                EventBus.getDefault().post(error);
+            }
+        });
+    }
+
     public String getApiKey() {
         return mTMDBKey;
     }
@@ -106,7 +122,7 @@ public class NetworkHelper {
         void getPopularMovies(
                 @Query("api_key") String key,
                 @Query("page") int page,
-                Callback<PopularMovieResponse> cb
+                Callback<MovieResponse> cb
         );
 
         // Getting info on a specific movie
@@ -116,6 +132,14 @@ public class NetworkHelper {
                 @Query("api_key") String key,
                 @Query("append_to_response") String append,
                 Callback<Movie> cb
+        );
+
+        // For searching movies
+        @GET(SEARCH_MOVIE)
+        void searchMovie(
+                @Query("api_key") String key,
+                @Query("query") String query,
+                Callback<MovieResponse> cb
         );
     }
 }

@@ -1,5 +1,7 @@
 package com.nasahapps.awkwardratings.ui;
 
+import android.annotation.TargetApi;
+import android.app.ActivityOptions;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -7,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
+import android.transition.ChangeImageTransform;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -53,8 +56,15 @@ public class MovieActivity extends ActionBarActivity {
     public static final String EXTRA_ID = "id";
     private static final String TAG = MovieActivity.class.getSimpleName();
 
+    @TargetApi(21)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if (Utils.isAtApiLevel(21)) {
+            // Set window transitions for when user clicks a movie
+            getWindow().setAllowEnterTransitionOverlap(true);
+            getWindow().setAllowReturnTransitionOverlap(true);
+            getWindow().setSharedElementExitTransition(new ChangeImageTransform());
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity);
         if (savedInstanceState == null) {
@@ -192,11 +202,18 @@ public class MovieActivity extends ActionBarActivity {
                         @Override
                         public void onSuccess() {
                             mPoster.setOnClickListener(new View.OnClickListener() {
+                                @TargetApi(21)
                                 @Override
                                 public void onClick(View v) {
                                     Intent i = new Intent(getActivity(), PosterActivity.class);
                                     i.putExtra(PosterActivity.EXTRA_URL, mMovie.getPosterPath());
-                                    startActivity(i);
+                                    if (Utils.isAtApiLevel(21)) {
+                                        // Blow the image up to size
+                                        getActivity().startActivity(i, ActivityOptions
+                                                .makeSceneTransitionAnimation(getActivity(), mPoster, "poster").toBundle());
+                                    } else {
+                                        startActivity(i);
+                                    }
                                 }
                             });
                             Palette.generateAsync(Utils.getImageViewBitmap(mPoster), new Palette.PaletteAsyncListener() {
@@ -224,6 +241,7 @@ public class MovieActivity extends ActionBarActivity {
                         && !mMovie.getVideos().getResults().isEmpty()
                         && mMovie.getVideos().getResults().get(0).getSite().equals("YouTube")
                         && mMovie.getVideos().getResults().get(0).getType().equals("Trailer")) {
+                    mPlayTrailer.setVisibility(View.VISIBLE);
                     mPlayTrailer.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
@@ -248,8 +266,6 @@ public class MovieActivity extends ActionBarActivity {
                             }
                         }
                     });
-                } else {
-                    mPlayTrailer.setVisibility(View.GONE);
                 }
 
                 // Set the movie title

@@ -41,4 +41,10 @@
         <copyright>Copyright 2008-2009 Google Inc.</copyright>
         <license>Apache Software License 2.0</license>
     </notice>
+    <notice>
+        <name>recyclerview-animators</name>
+        <url>https://github.com/wasabeef/recyclerview-animators</url>
+        <copyright>Copyright 2015 Wasabeef</copyright>
+        <license>Apache Software License 2.0</license>
+    </notice>
 </notices>

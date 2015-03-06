@@ -1,9 +1,9 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:tools="http://schemas.android.com/tools"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent"
-             android:animateLayoutChanges="true"
-             tools:context=".MainActivity$MainFragment">
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:animateLayoutChanges="true"
+                tools:context=".MainActivity$MainFragment">
 
     <com.malinskiy.superrecyclerview.SuperRecyclerView
         android:id="@+id/list"
@@ -19,7 +19,8 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"/>
+        android:background="?attr/colorPrimary"
+        android:elevation="10dp"/>
 
     <ListView
         android:id="@+id/searchListView"

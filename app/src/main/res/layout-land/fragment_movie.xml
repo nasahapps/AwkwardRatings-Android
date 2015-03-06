@@ -28,7 +28,9 @@
                 android:layout_height="200dp"
                 android:background="@drawable/transparent_button_bg"
                 android:elevation="0dp"
-                android:src="@drawable/ic_play"/>
+                android:src="@drawable/ic_play"
+                android:visibility="invisible"
+                tools:visibility="visible"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -51,6 +53,8 @@
                         android:id="@+id/poster"
                         android:layout_width="108dp"
                         android:layout_height="160dp"
+                        android:elevation="10dp"
+                        android:transitionName="poster"
                         android:visibility="invisible"
                         tools:src="@drawable/poster"
                         tools:visibility="visible"/>
@@ -95,6 +99,7 @@
                                 android:layout_height="56dp"
                                 android:layout_toLeftOf="@+id/awkwardness"
                                 android:background="@drawable/transparent_circle"
+                                android:elevation="5dp"
                                 android:text="NOT"
                                 android:textColor="#fff"
                                 android:visibility="invisible"
@@ -109,6 +114,7 @@
                                 android:layout_marginLeft="32dp"
                                 android:layout_marginRight="32dp"
                                 android:background="@drawable/transparent_circle"
+                                android:elevation="5dp"
                                 android:textColor="#fff"
                                 android:visibility="invisible"
                                 tools:background="@drawable/green_circle"
@@ -130,6 +136,7 @@
                                 android:layout_height="56dp"
                                 android:layout_toRightOf="@id/awkwardness"
                                 android:background="@drawable/transparent_circle"
+                                android:elevation="5dp"
                                 android:text="AWK"
                                 android:textColor="#fff"
                                 android:visibility="invisible"

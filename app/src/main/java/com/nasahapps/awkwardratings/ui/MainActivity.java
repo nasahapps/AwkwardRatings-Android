@@ -1,5 +1,7 @@
 package com.nasahapps.awkwardratings.ui;
 
+import android.annotation.TargetApi;
+import android.app.ActivityOptions;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
@@ -15,6 +17,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.transition.Explode;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -70,8 +73,15 @@ public class MainActivity extends ActionBarActivity {
 
     private final static String TAG = MainActivity.class.getSimpleName();
 
+    @TargetApi(21)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if (Utils.isAtApiLevel(21)) {
+            // Set window transitions for when user clicks a movie
+            getWindow().setAllowEnterTransitionOverlap(true);
+            getWindow().setAllowReturnTransitionOverlap(true);
+            getWindow().setExitTransition(new Explode());
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity);
         if (savedInstanceState == null) {
@@ -200,13 +210,21 @@ public class MainActivity extends ActionBarActivity {
                                     movie.put("poster_path", m.getPosterPath());
                                     movie.put("title", m.getTitle());
                                     movie.saveInBackground(new SaveCallback() {
+                                        @TargetApi(21)
                                         @Override
                                         public void done(ParseException e) {
                                             // If everything went well, then open up the movie page
                                             if (e == null) {
                                                 Intent i = new Intent(getActivity(), MovieActivity.class);
                                                 i.putExtra(MovieActivity.EXTRA_ID, m.getId());
-                                                startActivity(i);
+                                                if (Utils.isAtApiLevel(21)) {
+                                                    // Call this version of startActivity to allow the transition animations
+                                                    // to happen
+                                                    getActivity().startActivity(i,
+                                                            ActivityOptions.makeSceneTransitionAnimation(getActivity()).toBundle());
+                                                } else {
+                                                    startActivity(i);
+                                                }
                                             } else {
                                                 Utils.showError(getActivity(), TAG, "Error saving new movie", e,
                                                         e.getLocalizedMessage());
@@ -231,13 +249,21 @@ public class MainActivity extends ActionBarActivity {
                                 if (m.getTitle() != null)
                                     movie.put("title", m.getTitle());
                                 movie.saveInBackground(new SaveCallback() {
+                                    @TargetApi(21)
                                     @Override
                                     public void done(ParseException e) {
                                         // If everything went well, then open up the movie page
                                         if (e == null) {
                                             Intent i = new Intent(getActivity(), MovieActivity.class);
                                             i.putExtra(MovieActivity.EXTRA_ID, m.getId());
-                                            startActivity(i);
+                                            if (Utils.isAtApiLevel(21)) {
+                                                // Call this version of startActivity to allow the transition animations
+                                                // to happen
+                                                getActivity().startActivity(i,
+                                                        ActivityOptions.makeSceneTransitionAnimation(getActivity()).toBundle());
+                                            } else {
+                                                startActivity(i);
+                                            }
                                         } else {
                                             Utils.showError(getActivity(), TAG, "Error saving new movie", e,
                                                     e.getLocalizedMessage());
@@ -446,6 +472,7 @@ public class MainActivity extends ActionBarActivity {
                 return new ViewHolder(v);
             }
 
+            @TargetApi(21)
             @Override
             public void onBindViewHolder(ViewHolder holder, int position) {
                 ParseObject movie = movies.get(position);
@@ -536,7 +563,14 @@ public class MainActivity extends ActionBarActivity {
                         ParseObject movie = mMovies.get(position);
                         Intent i = new Intent(getActivity(), MovieActivity.class);
                         i.putExtra(MovieActivity.EXTRA_ID, movie.getNumber("movie_id").intValue());
-                        startActivity(i);
+                        if (Utils.isAtApiLevel(21)) {
+                            // Call this version of startActivity to allow the transition animations
+                            // to happen
+                            getActivity().startActivity(i,
+                                    ActivityOptions.makeSceneTransitionAnimation(getActivity()).toBundle());
+                        } else {
+                            startActivity(i);
+                        }
                     }
                 });
             }

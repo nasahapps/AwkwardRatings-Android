@@ -1,28 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:tools="http://schemas.android.com/tools"
-              android:layout_width="match_parent"
-              android:layout_height="100dp"
-              android:orientation="horizontal"
-              tools:background="#000">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:background="#000">
 
-    <!-- ImageView dimensions are 68x100 dp to keep in line
-        with actual movie poster dimensions (27x40") -->
     <ImageView
         android:id="@+id/poster"
-        android:layout_width="68dp"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:elevation="5dp"
         android:transitionName="poster"
         tools:src="@drawable/small_poster"/>
 
     <LinearLayout
         android:id="@+id/bottomLayout"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_alignParentBottom="true"
         android:layout_weight="1"
+        android:elevation="5dp"
         android:orientation="vertical"
-        android:padding="8dp">
+        android:paddingBottom="8dp"
+        android:paddingLeft="8dp"
+        android:paddingRight="68dp"
+        android:paddingTop="8dp"
+        tools:background="#000">
 
         <TextView
             android:id="@+id/title"
@@ -31,7 +33,7 @@
             android:ellipsize="end"
             android:maxLines="2"
             android:textColor="#fff"
-            android:textSize="20sp"
+            android:textSize="18sp"
             tools:text="The Avengers\nWhat Very long title what"/>
 
         <TextView
@@ -46,8 +48,12 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/buttonLayout"
         android:layout_width="68dp"
-        android:layout_height="match_parent"
+        android:layout_height="100dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:elevation="10dp"
         android:orientation="vertical">
 
         <Button
@@ -56,7 +62,7 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:background="@drawable/transparent_button_bg"
-            android:elevation="5dp"
+            android:elevation="10dp"
             android:text="AWK"/>
 
         <Button
@@ -65,9 +71,9 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:background="@drawable/transparent_button_bg"
-            android:elevation="5dp"
+            android:elevation="10dp"
             android:text="NOT"/>
 
     </LinearLayout>
 
-</LinearLayout>
+</RelativeLayout>

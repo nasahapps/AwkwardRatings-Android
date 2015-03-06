@@ -6,6 +6,7 @@ import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -33,6 +34,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -127,14 +129,17 @@ public class MainActivity extends ActionBarActivity {
             ((ActionBarActivity) getActivity()).setSupportActionBar(mToolbar);
 
             mRecyclerView = (SuperRecyclerView) v.findViewById(R.id.list);
-            // Lay out in a linear fashion (ala ListView) if on a phone,
-            // in a grid if on a tablet
-            if (!Utils.isTablet(getActivity())) {
-                mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+            // When in portrait
+            if (Utils.isPortrait(getActivity())) {
+                // Phones laid out as a list
+                if (!Utils.isTablet(getActivity())) {
+                    mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+                } else { // Tablets in a grid of 2 columns
+                    mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2));
+                }
             } else {
-                // 2 columns if portrait, 3 if landscape
-                mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(),
-                        Utils.isPortrait(getActivity()) ? 2 : 3));
+                // When in landscape, a horizontal list
+                mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.HORIZONTAL, false));
             }
             // Our scroll listener to have it hide/show the Toolbar on scroll
             mRecyclerView.setOnScrollListener(new HidingScrollListener() {
@@ -149,12 +154,15 @@ public class MainActivity extends ActionBarActivity {
                 }
             });
             // Pull down to refresh list of movies
-            mRecyclerView.setRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-                @Override
-                public void onRefresh() {
-                    getMovies();
-                }
-            });
+            // Only available in portrait since in landscape you swipe left-right, not up-down
+            if (Utils.isPortrait(getActivity())) {
+                mRecyclerView.setRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+                    @Override
+                    public void onRefresh() {
+                        getMovies();
+                    }
+                });
+            }
             // And have a colorful spinning refresh animation
             mRecyclerView.setRefreshingColorResources(android.R.color.holo_orange_light,
                     android.R.color.holo_blue_light, android.R.color.holo_green_light,
@@ -477,6 +485,27 @@ public class MainActivity extends ActionBarActivity {
             @Override
             public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
                 View v = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.list_movie, viewGroup, false);
+                // If in landscape (tablet or phone), alter the size of the view to adjust
+                // proportionally to the movie poster (27:40)
+                if (!Utils.isPortrait(getActivity())) {
+                    Point size = Utils.getScreenDimensions(getActivity());
+                    // Get the adjusted height of the screen (screen height - action bar height)
+                    // (Had to multiply action bar height by 2 for some reason to get the correct height)
+                    size.y -= (Utils.getActionBarHeight(getActivity()) * 2);
+                    // And get the width based on that height
+                    int newWidth = 27 * size.y / 40;
+                    // Set these values to each list item
+                    RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(newWidth, size.y);
+                    v.setLayoutParams(lp);
+                } else if (Utils.isTablet(getActivity())) {
+                    // Else if a tablet in portrait, do the same thing, but adjust to the width of the
+                    // view's parent width (should be half the screen width since it's laid out in
+                    // 2 columns
+                    Point size = Utils.getScreenDimensions(getActivity());
+                    int newHeight = (size.x / 2) * 40 / 27;
+                    RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(v.getWidth(), newHeight);
+                    v.setLayoutParams(lp);
+                }
                 return new ViewHolder(v);
             }
 
@@ -514,9 +543,13 @@ public class MainActivity extends ActionBarActivity {
 
                 if (movie.getString("poster_path") != null) {
                     // Get movie poster and Palette color
-                    final View background = holder.itemView;
+                    // the background to be colored on phones is the entire bg of the view
+                    // the background to be colored on tablets or phones in landscape
+                    // is the bg that is under the text
+                    final View background = (!Utils.isTablet(getActivity()) && Utils.isPortrait(getActivity()))
+                            ? holder.itemView : holder.bottomLayout;
                     final ImageView iv = holder.poster;
-                    Uri uri = Uri.parse("https://image.tmdb.org/t/p/w150" + movie.getString("poster_path")
+                    Uri uri = Uri.parse("https://image.tmdb.org/t/p/w300" + movie.getString("poster_path")
                             + "?api_key=" + NetworkHelper.getInstance(getActivity()).getApiKey());
                     Picasso.with(getActivity()).load(uri).into(holder.poster, new Callback() {
                         @Override
@@ -525,7 +558,15 @@ public class MainActivity extends ActionBarActivity {
                                 @Override
                                 public void onGenerated(Palette p) {
                                     int color = p.getDarkMutedColor(p.getMutedColor(p.getDarkVibrantColor(0xff000000)));
-                                    Utils.animateToColor(background, color);
+                                    if (!Utils.isPortrait(getActivity()) || Utils.isTablet(getActivity())) {
+                                        // Have the alpha be 0.7 in landscape (phones)
+                                        // Or 0.7 for tablets in general
+                                        // 0.7 alpha is 179/255
+                                        int newColor = Color.argb(179, Color.red(color), Color.green(color), Color.blue(color));
+                                        Utils.animateToColor(background, newColor);
+                                    } else {
+                                        Utils.animateToColor(background, color);
+                                    }
                                 }
                             });
                         }
@@ -592,6 +633,7 @@ public class MainActivity extends ActionBarActivity {
                 public TextView title, rating;
                 public ImageView poster;
                 public Button yesAwkward, noAwkward;
+                public View bottomLayout;
 
                 public ViewHolder(View v) {
                     super(v);
@@ -600,6 +642,7 @@ public class MainActivity extends ActionBarActivity {
                     poster = (ImageView) v.findViewById(R.id.poster);
                     yesAwkward = (Button) v.findViewById(R.id.awkwardButton);
                     noAwkward = (Button) v.findViewById(R.id.notAwkwardButton);
+                    bottomLayout = v.findViewById(R.id.bottomLayout);
                 }
             }
         }

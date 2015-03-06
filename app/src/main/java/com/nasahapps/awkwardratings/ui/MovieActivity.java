@@ -186,8 +186,8 @@ public class MovieActivity extends ActionBarActivity {
                 mMovie = movie;
                 // Set the backdrop and poster, if available
                 if (mMovie.getBackdropPath() != null) {
-                    Uri uri = Uri.parse("https://image.tmdb.org/t/p/w" + (Utils.isTablet(getActivity())
-                            ? (Utils.is10Inches(getActivity()) ? "1000" : "500") : "300") + mMovie.getBackdropPath()
+                    Uri uri = Uri.parse("https://image.tmdb.org/t/p/w" + (Utils.is10Inches(getActivity())
+                            ? "1000" : "500") + mMovie.getBackdropPath()
                             + "?api_key=" + NetworkHelper.getInstance(getActivity()).getApiKey());
                     Picasso.with(getActivity()).load(uri).into(mBackdrop);
                 } else {
@@ -197,8 +197,7 @@ public class MovieActivity extends ActionBarActivity {
                     mBackdrop.setLayoutParams(lp);
                 }
                 if (mMovie.getPosterPath() != null) {
-                    Uri uri = Uri.parse("https://image.tmdb.org/t/p/w" + (Utils.isTablet(getActivity())
-                            ? "300" : "150") + mMovie.getPosterPath()
+                    Uri uri = Uri.parse("https://image.tmdb.org/t/p/w300" + mMovie.getPosterPath()
                             + "?api_key=" + NetworkHelper.getInstance(getActivity()).getApiKey());
                     Picasso.with(getActivity()).load(uri).into(mPoster, new Callback() {
                         @Override

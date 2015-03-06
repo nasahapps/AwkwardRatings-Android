@@ -29,9 +29,11 @@ For you devs out there, here I will highlight what exactly this app is doing and
 
 This view primarily shows the list of most-recently-updated movies from our Parse DB in a RecyclerView. For this app, I use [SuperRecyclerView](https://github.com/Malinskiy/SuperRecyclerView) for its ease of use in integrating SwipeRefreshLayout, an empty view, and for loading more items as the user scrolls down the list. Each list item contains two buttons for the user to vote on that particular movie (awkward or not awkward). 
 
+The layout for the RecyclerView is different depending on the device and orientation. For phones in portrait, items are laid out in a vertical list using `LinearLayoutManager`, and in landscape, items are laid out in a horizontal list also using `LinearLayoutManager` but setting the orientation to `LinearLayoutManager.HORIZONTAL`. For tablets in portrait, items are laid out in a vertical grid of 2 columns using `GridLayoutManager`, and landscape for tablets are the same as for phones.
+
 The code for the Toolbar-hiding/showing effect as the user scrolls was sampled from [this helpful blog by Michal Z.](http://mzgreen.github.io/2015/02/15/How-to-hideshow-Toolbar-when-list-is-scroling%28part1%29/)
 
-Also, users are able to search for movies from this view from the Toolbar. This brings up a ListView that holds those results (Why ListView and not RecyclerView? Because RecyclerView has problems when fading in and out if its parent has `animateLayoutChanges=true` in the XML file. Plus, the ListView is known in this app to show at most 20 items while the main RecyclerView may hold thousands)
+Also, users are able to search for movies from this view from the Toolbar. This brings up a ListView that holds those results (Why ListView and not RecyclerView? Because RecyclerView has problems when fading in and out if its parent has `animateLayoutChanges=true` in the XML file. Plus, the ListView is guaranteed in this app to show at most 20 items while the main RecyclerView may hold thousands)
 
 <h4>MovieActivity.class/MovieFragment.class</h4>
 
@@ -46,6 +48,16 @@ The animations in MainFragment are ItemAnimator animations made easy thanks to [
 This has each new item slide in from the bottom, scale in, and fade in as the user scrolls through the list.  
 
 Pre-Lollipop, the animations in MovieFragment are short and simple (see the animation functions at the bottom of MainFragment.class). The three middle buttons "pop" in with a ScaleAnimation, the text fades in with an AlphaAnimation, the line "draws" itself across the page with a ScaleAnimation (scaling the X value from 0 to it's original value), and the poster fades and slides down into place with an AnimationSet containing both an AlphaAnimation and a TranslateAnimation.
+
+Post-Lollipop, there are also transition animations. The transition from MainActivity to MovieActivity uses the built-in Explode transition  
+
+    getWindow().setExitTransition(new Explode());
+
+Also, the transition from MovieActivity to PosterActivity uses a shared element transition on the poster image
+
+    getWindow().setSharedElementExitTransition(new ChangeImageTransform());
+    
+For more info, refer to the [Material Design Custom Animations](http://developer.android.com/training/material/animations.html) docs on the Android dev website.  
 
 <h4>NetworkHelper.class</h4>  
 
@@ -105,5 +117,3 @@ My Parse DB implementation is very simple, because it only consists of one class
 * video (boolean)
 
 Also, I use Cloud Code that, every night, polls TMDB for the day's popular movies and adds them to my own DB if those movies don't already exist in my DB. You can view that code in the /cloud_code/main.js
-
-If you wish to try out the app as-is, just download and install Awkward-Ratings.apk in the root folder.

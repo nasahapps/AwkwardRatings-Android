@@ -37,6 +37,16 @@ Also, users are able to search for movies from this view from the Toolbar. This 
 
 This view shows info on a selected movie. This info includes the movie's backdrop image, poster image, title, release date, awkwardness rating, and a brief overview of the plot. Users can click on the movie poster to enlarge it in a new PosterActivity instance, or click on the movie backdrop to view that movie's trailer (if available).  
 
+<h4>Animations</h4>  
+
+The animations in MainFragment are ItemAnimator animations made easy thanks to [Wasabeef's recyclerview-animators library](https://github.com/wasabeef/recyclerview-animators). In this app, a simple one-liner was made to achieve the effect you see: 
+
+    mRecyclerView.setAdapter(new SlideInBottomAnimationAdapter(new ScaleInAnimationAdapter(new AlphaInAnimationAdapter(adapter))));  
+    
+This has each new item slide in from the bottom, scale in, and fade in as the user scrolls through the list.  
+
+Pre-Lollipop, the animations in MovieFragment are short and simple (see the animation functions at the bottom of MainFragment.class). The three middle buttons "pop" in with a ScaleAnimation, the text fades in with an AlphaAnimation, the line "draws" itself across the page with a ScaleAnimation (scaling the X value from 0 to it's original value), and the poster fades and slides down into place with an AnimationSet containing both an AlphaAnimation and a TranslateAnimation.
+
 <h4>NetworkHelper.class</h4>  
 
 NetworkHelper is the helper class for REST API calls. It's basically a wrapper for a [Retrofit](http://square.github.io/retrofit/) client. All non-image, non-video, and non-database calls are done through this class. 

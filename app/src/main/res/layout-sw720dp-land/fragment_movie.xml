@@ -36,6 +36,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/backdrop"
+                android:layout_marginLeft="192dp"
+                android:layout_marginRight="192dp"
                 android:layout_marginTop="-40dp"
                 android:clipChildren="false"
                 android:clipToPadding="false"
@@ -51,8 +53,8 @@
 
                     <ImageView
                         android:id="@+id/poster"
-                        android:layout_width="216dp"
-                        android:layout_height="320dp"
+                        android:layout_width="162dp"
+                        android:layout_height="240dp"
                         android:elevation="10dp"
                         android:transitionName="poster"
                         android:visibility="invisible"
@@ -72,7 +74,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textColor="#fff"
-                            android:textSize="32sp"
+                            android:textSize="26sp"
                             android:visibility="invisible"
                             tools:text="Birdman"
                             tools:visibility="visible"/>
@@ -82,7 +84,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textColor="#fff"
-                            android:textSize="18sp"
+                            android:textSize="15sp"
                             android:visibility="invisible"
                             tools:text="October 2014 \u00b7 119 minutes"
                             tools:visibility="visible"/>
@@ -167,7 +169,7 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:textColor="#fff"
-                    android:textSize="24sp"
+                    android:textSize="18sp"
                     android:visibility="invisible"
                     tools:text="A fading actor best known for his portrayal of a popular superhero attempts to mount a comeback by appearing in a Broadway play. As opening night approaches, his attempts to become more altruistic, rebuild his career, and reconnect with friends and family prove more difficult than expected."
                     tools:visibility="visible"/>

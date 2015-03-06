@@ -187,7 +187,7 @@ public class MovieActivity extends ActionBarActivity {
                 // Set the backdrop and poster, if available
                 if (mMovie.getBackdropPath() != null) {
                     Uri uri = Uri.parse("https://image.tmdb.org/t/p/w" + (Utils.isTablet(getActivity())
-                            ? "500" : "300") + mMovie.getBackdropPath()
+                            ? (Utils.is10Inches(getActivity()) ? "1000" : "500") : "300") + mMovie.getBackdropPath()
                             + "?api_key=" + NetworkHelper.getInstance(getActivity()).getApiKey());
                     Picasso.with(getActivity()).load(uri).into(mBackdrop);
                 } else {

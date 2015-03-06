@@ -1,4 +1,4 @@
-# Awkward Ratings for Android - v. 0.2
+# Awkward Ratings for Android - v. 1.0
 
 [https://play.google.com/store/apps/details?id=com.nasahapps.awkwardratings](https://play.google.com/store/apps/details?id=com.nasahapps.awkwardratings)
 

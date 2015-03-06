@@ -3,9 +3,11 @@ package com.nasahapps.awkwardratings;
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -164,6 +166,14 @@ public class Utils {
 
     public static boolean hasValidAppToOpen(Intent i, Context c) {
         return i.resolveActivity(c.getPackageManager()) != null;
+    }
+
+    public static void setScreenOrientation(Activity a) {
+        if (!isTablet(a)) {
+            a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        } else {
+            a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        }
     }
 
 }

@@ -1,5 +1,7 @@
 # Awkward Ratings for Android - v. 0.2
 
+[https://play.google.com/store/apps/details?id=com.nasahapps.awkwardratings](https://play.google.com/store/apps/details?id=com.nasahapps.awkwardratings)
+
 Simple app that uses the REST APIs documented on [www.themoviedb.org](https://www.themoviedb.org/documentation/api). Specifically, it asks for the day's most popular movies (sorted by when that movie was last updated in my database) and allows users of the app to vote on which movies would be awkward to watch with parents (or vice versa). Results are presented in an endless RecyclerView.  
 
 The idea for this app was inspired by [this Reddit post](http://redd.it/2xhq9g).

@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:transitionName="poster"
-        tools:src="@drawable/poster"/>
+        tools:src="@drawable/small_poster"/>
 
     <ProgressBar
         android:id="@+id/progressBar"

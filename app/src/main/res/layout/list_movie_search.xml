@@ -13,7 +13,8 @@
         android:layout_width="68dp"
         android:layout_height="match_parent"
         android:elevation="5dp"
-        android:transitionName="poster"/>
+        android:transitionName="poster"
+        tools:src="@drawable/small_poster"/>
 
     <LinearLayout
         android:layout_width="match_parent"

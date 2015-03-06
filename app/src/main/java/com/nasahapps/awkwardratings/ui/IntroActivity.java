@@ -1,6 +1,7 @@
 package com.nasahapps.awkwardratings.ui;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
@@ -29,7 +30,7 @@ public class IntroActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity);
         // Let's have the IntroActivity be portrait-only
-        Utils.setScreenOrientation(this);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.container, new IntroFragment())
@@ -70,32 +71,18 @@ public class IntroActivity extends ActionBarActivity {
                 }
             });
 
-            if (savedInstanceState == null) {
-                // Animate our views in
-                fadeAndSlideIn(text1, false, 0);
-                fadeIn(text2, 1500);
-                fadeAndSlideIn(text3, false, 3500);
-                fadeAndSlideIn(text4, true, 5000);
-                fadeAndSlideIn(text5, false, 6500);
-                fadeAndSlideIn(text6, true, 8000);
-                fadeAndSlideIn(text7, false, 9500);
-                fadeAndSlideIn(text8, true, 11000);
-                fadeAndSlideIn(text9, false, 14000);
-                fadeAndSlideIn(text10, true, 15000);
-                fadeAndSlideIn(mStartButton, true, 15500);
-            } else {
-                text1.setVisibility(View.VISIBLE);
-                text2.setVisibility(View.VISIBLE);
-                text3.setVisibility(View.VISIBLE);
-                text4.setVisibility(View.VISIBLE);
-                text5.setVisibility(View.VISIBLE);
-                text6.setVisibility(View.VISIBLE);
-                text7.setVisibility(View.VISIBLE);
-                text8.setVisibility(View.VISIBLE);
-                text9.setVisibility(View.VISIBLE);
-                text10.setVisibility(View.VISIBLE);
-                mStartButton.setVisibility(View.VISIBLE);
-            }
+            // Animate our views in
+            fadeAndSlideIn(text1, false, 0);
+            fadeIn(text2, 1500);
+            fadeAndSlideIn(text3, false, 3500);
+            fadeAndSlideIn(text4, true, 5000);
+            fadeAndSlideIn(text5, false, 6500);
+            fadeAndSlideIn(text6, true, 8000);
+            fadeAndSlideIn(text7, false, 9500);
+            fadeAndSlideIn(text8, true, 11000);
+            fadeAndSlideIn(text9, false, 14000);
+            fadeAndSlideIn(text10, true, 15000);
+            fadeAndSlideIn(mStartButton, true, 15500);
 
             return v;
         }

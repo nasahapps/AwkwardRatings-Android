@@ -13,6 +13,7 @@ import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.graphics.Palette;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -126,8 +127,15 @@ public class MainActivity extends ActionBarActivity {
             ((ActionBarActivity) getActivity()).setSupportActionBar(mToolbar);
 
             mRecyclerView = (SuperRecyclerView) v.findViewById(R.id.list);
-            // Lay out in a linear fashion (ala ListView)
-            mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+            // Lay out in a linear fashion (ala ListView) if on a phone,
+            // in a grid if on a tablet
+            if (!Utils.isTablet(getActivity())) {
+                mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+            } else {
+                // 2 columns if portrait, 3 if landscape
+                mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(),
+                        Utils.isPortrait(getActivity()) ? 2 : 3));
+            }
             // Our scroll listener to have it hide/show the Toolbar on scroll
             mRecyclerView.setOnScrollListener(new HidingScrollListener() {
                 @Override

@@ -20,6 +20,7 @@
             android:layout_marginBottom="16dp"
             android:fontFamily="sans-serif-thin"
             android:text="Welcome to..."
+            android:textSize="@dimen/normal_text_size"
             android:visibility="invisible"
             tools:visibility="visible"/>
 
@@ -31,7 +32,7 @@
             android:layout_marginBottom="16dp"
             android:fontFamily="sans-serif-light"
             android:text="Awkward Ratings"
-            android:textSize="34sp"
+            android:textSize="@dimen/title_text_size"
             android:visibility="invisible"
             tools:visibility="visible"/>
 
@@ -42,6 +43,7 @@
             android:layout_marginBottom="16dp"
             android:fontFamily="sans-serif-thin"
             android:text="the app where you find out which movies\nwould be awkward to watch with your parents..."
+            android:textSize="@dimen/normal_text_size"
             android:visibility="invisible"
             tools:visibility="visible"/>
 
@@ -54,6 +56,7 @@
             android:fontFamily="sans-serif-thin"
             android:gravity="right"
             android:text="...or the app where you find out which movies\nwould be awkward to watch with your kids."
+            android:textSize="@dimen/normal_text_size"
             android:visibility="invisible"
             tools:visibility="visible"/>
 
@@ -64,6 +67,7 @@
             android:layout_marginBottom="16dp"
             android:fontFamily="sans-serif-thin"
             android:text="Whichever floats your boat."
+            android:textSize="@dimen/normal_text_size"
             android:visibility="invisible"
             tools:visibility="visible"/>
 
@@ -76,6 +80,7 @@
             android:fontFamily="sans-serif-thin"
             android:gravity="right"
             android:text="Awkward ratings for each movie\nare done by you, our users..."
+            android:textSize="@dimen/normal_text_size"
             android:visibility="invisible"
             tools:visibility="visible"/>
 
@@ -86,6 +91,7 @@
             android:layout_marginBottom="16dp"
             android:fontFamily="sans-serif-thin"
             android:text="...and a warehouse full of movie elves."
+            android:textSize="@dimen/normal_text_size"
             android:visibility="invisible"
             tools:visibility="visible"/>
 
@@ -98,6 +104,7 @@
             android:fontFamily="sans-serif-thin"
             android:gravity="right"
             android:text="So go help those elves out..."
+            android:textSize="@dimen/normal_text_size"
             android:visibility="invisible"
             tools:visibility="visible"/>
 
@@ -114,6 +121,7 @@
             android:layout_marginBottom="16dp"
             android:fontFamily="sans-serif-thin"
             android:text="...or not."
+            android:textSize="@dimen/normal_text_size"
             android:visibility="invisible"
             tools:visibility="visible"/>
 
@@ -126,7 +134,7 @@
             android:fontFamily="sans-serif-thin"
             android:gravity="right"
             android:text="- Nasah Apps"
-            android:textSize="18sp"
+            android:textSize="@dimen/medium_text_size"
             android:visibility="invisible"
             tools:visibility="visible"/>
 

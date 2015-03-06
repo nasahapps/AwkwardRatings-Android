@@ -102,7 +102,7 @@ public class MainActivity extends ActionBarActivity {
         private Toolbar mToolbar;
         // For when we return from MovieActivity, we know which view in RecyclerView to
         // refresh in case user voted on that page
-        private int mLastPosition;
+        private int mLastPosition, mRateCounter;
         // Using a ListView instead of RecyclerView because I've had problems in the past
         // with RecyclerViews crashing whenever its parent layout in XML has
         // android:animateLayoutChanges="true". ListViews don't have this problem
@@ -291,6 +291,12 @@ public class MainActivity extends ActionBarActivity {
                     });
                 }
             });
+
+            mRateCounter = PreferencesHelper.getInstance(getActivity())
+                    .getInt(PreferencesHelper.KEY_RATE_APP_COUNTER, 0);
+            mRateCounter++;
+            PreferencesHelper.getInstance(getActivity()).putInt(PreferencesHelper.KEY_RATE_APP_COUNTER, mRateCounter);
+            Utils.showRateDialog(getActivity(), mRateCounter);
 
             EventBus.getDefault().register(this);
 

@@ -4,8 +4,10 @@ import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
@@ -18,6 +20,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Build;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
@@ -316,6 +319,40 @@ public class Utils {
         }
 
         return result;
+    }
+
+    /**
+     * Show a Dialog asking the user to rate the app
+     * This implementation asks after being called every 10 times
+     *
+     * @param c           Context
+     * @param rateCounter a counter used to keep track of how many times this function was called
+     */
+    public static void showRateDialog(final Context c, int rateCounter) {
+        if (!PreferencesHelper.getInstance(c).getBoolean(PreferencesHelper.KEY_RATE_APP, false)
+                && rateCounter % 10 == 0) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(c);
+            builder.setTitle("Rate the app")
+                    .setMessage(String.format("Like %1$s? Rate it in the Play Store!", c.getString(R.string.app_name)))
+                    .setPositiveButton("Rate", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            PreferencesHelper.getInstance(c).putBoolean(PreferencesHelper.KEY_RATE_APP, true);
+
+                            Uri link = Uri.parse("market://details?id=" + c.getPackageName());
+                            Intent i = new Intent(Intent.ACTION_VIEW);
+                            i.setData(link);
+                            c.startActivity(i);
+                        }
+                    })
+                    .setNegativeButton("No thanks", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                        }
+                    });
+            builder.create().show();
+        }
     }
 
 }

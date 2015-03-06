@@ -167,7 +167,7 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:textColor="#fff"
-                    android:textSize="18sp"
+                    android:textSize="16sp"
                     android:visibility="invisible"
                     tools:text="A fading actor best known for his portrayal of a popular superhero attempts to mount a comeback by appearing in a Broadway play. As opening night approaches, his attempts to become more altruistic, rebuild his career, and reconnect with friends and family prove more difficult than expected."
                     tools:visibility="visible"/>

@@ -119,3 +119,19 @@ My Parse DB implementation is very simple, because it only consists of one class
 * video (boolean)
 
 Also, I use Cloud Code that, every night, polls TMDB for the day's popular movies and adds them to my own DB if those movies don't already exist in my DB. You can view that code in the /cloud_code/main.js
+
+<h3>License</h3> 
+
+Copyright 2015 Hakeem Hasan
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.

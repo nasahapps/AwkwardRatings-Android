@@ -14,6 +14,7 @@ public class Movie {
     private int id, budget, revenue, runtime;
     private List<Genre> genres;
     private VideoResults videos;
+    private KeywordResults keywords;
 
     public boolean isAdult() {
         return adult;
@@ -65,5 +66,9 @@ public class Movie {
 
     public VideoResults getVideos() {
         return videos;
+    }
+
+    public KeywordResults getKeywords() {
+        return keywords;
     }
 }

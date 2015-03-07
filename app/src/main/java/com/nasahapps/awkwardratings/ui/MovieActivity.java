@@ -92,9 +92,10 @@ public class MovieActivity extends ActionBarActivity {
 
     public static class MovieFragment extends Fragment {
 
-        private View mBackground, mSeparatorOne, mAwkwardLabel;
+        private View mBackground, mLeftSeparatorOne, mRightSeparatorOne, mLeftSeparatorTwo,
+                mRightSeparatorTwo, mKeywordsHeader, mOverviewHeader, mAwkwardLabel;
         private ImageView mBackdrop, mPoster;
-        private TextView mTitle, mMoreInfo, mOverview;
+        private TextView mTitle, mMoreInfo, mOverview, mKeywords;
         private Button mNotAwkwardButton, mAwkwardButton, mAwkwardness;
         private ImageButton mPlayTrailer;
         private Map<Integer, MovieRating> mMovieRatings;
@@ -137,7 +138,13 @@ public class MovieActivity extends ActionBarActivity {
             mNotAwkwardButton = (Button) v.findViewById(R.id.notAwkwardButton);
             mAwkwardButton = (Button) v.findViewById(R.id.awkwardButton);
             mPlayTrailer = (ImageButton) v.findViewById(R.id.playTrailer);
-            mSeparatorOne = v.findViewById(R.id.separatorOne);
+            mLeftSeparatorOne = v.findViewById(R.id.leftSeparatorOne);
+            mRightSeparatorOne = v.findViewById(R.id.rightSeparatorOne);
+            mLeftSeparatorTwo = v.findViewById(R.id.leftSeparatorTwo);
+            mRightSeparatorTwo = v.findViewById(R.id.rightSeparatorTwo);
+            mKeywordsHeader = v.findViewById(R.id.keywordsHeader);
+            mOverviewHeader = v.findViewById(R.id.overviewHeader);
+            mKeywords = (TextView) v.findViewById(R.id.keywords);
             mAwkwardLabel = v.findViewById(R.id.awkwardLabel);
 
             EventBus.getDefault().register(this);
@@ -151,7 +158,13 @@ public class MovieActivity extends ActionBarActivity {
                 mTitle.setVisibility(View.VISIBLE);
                 mMoreInfo.setVisibility(View.VISIBLE);
                 mOverview.setVisibility(View.VISIBLE);
-                mSeparatorOne.setVisibility(View.VISIBLE);
+                mLeftSeparatorOne.setVisibility(View.VISIBLE);
+                mRightSeparatorOne.setVisibility(View.VISIBLE);
+                mLeftSeparatorTwo.setVisibility(View.VISIBLE);
+                mRightSeparatorTwo.setVisibility(View.VISIBLE);
+                mKeywords.setVisibility(View.VISIBLE);
+                mKeywordsHeader.setVisibility(View.VISIBLE);
+                mOverviewHeader.setVisibility(View.VISIBLE);
                 mPoster.setVisibility(View.VISIBLE);
                 if (Utils.isPortrait(getActivity())) {
                     // Only set the awkward label to visible if in portrait
@@ -233,6 +246,12 @@ public class MovieActivity extends ActionBarActivity {
                     });
                 } else {
                     mPoster.setVisibility(View.GONE);
+                }
+
+                // Set movie keywords
+                if (mMovie.getKeywords() != null
+                        && Utils.buildString(mMovie.getKeywords().getKeywords()) != null) {
+                    mKeywords.setText(Utils.buildString(mMovie.getKeywords().getKeywords()));
                 }
 
                 // Hide the play button if there is no trailer
@@ -390,9 +409,15 @@ public class MovieActivity extends ActionBarActivity {
                             // And fade the text in
                             fadeIn(mTitle, 0);
                             fadeIn(mMoreInfo, 100);
-                            // And "draw" the line across
-                            lineAcross(mSeparatorOne, 100);
-                            fadeIn(mOverview, 200);
+                            // And "draw" the lines across
+                            lineAcross(mLeftSeparatorOne, 100);
+                            fadeIn(mKeywordsHeader, 200);
+                            lineAcross(mRightSeparatorOne, 300);
+                            fadeIn(mKeywords, 200);
+                            lineAcross(mLeftSeparatorTwo, 400);
+                            fadeIn(mOverviewHeader, 500);
+                            lineAcross(mRightSeparatorTwo, 600);
+                            fadeIn(mOverview, 500);
                         } else {
                             Utils.showError(getActivity(), TAG, "Error querying movie", e, e.getLocalizedMessage());
                         }

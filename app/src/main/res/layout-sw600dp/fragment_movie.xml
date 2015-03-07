@@ -151,15 +151,98 @@
 
                 </LinearLayout>
 
-                <View
-                    android:id="@+id/separatorOne"
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginBottom="16dp"
-                    android:layout_marginTop="16dp"
-                    android:background="@color/off_white"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:id="@+id/leftSeparatorOne"
+                        android:layout_width="wrap_content"
+                        android:layout_height="1dp"
+                        android:layout_marginBottom="16dp"
+                        android:layout_marginRight="16dp"
+                        android:layout_marginTop="16dp"
+                        android:layout_weight="1"
+                        android:background="@color/off_white"
+                        android:visibility="invisible"
+                        tools:visibility="visible"/>
+
+                    <TextView
+                        android:id="@+id/keywordsHeader"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:fontFamily="sans-serif-light"
+                        android:text="K E Y W O R D S"
+                        android:visibility="invisible"
+                        tools:visibility="visible"/>
+
+                    <View
+                        android:id="@+id/rightSeparatorOne"
+                        android:layout_width="wrap_content"
+                        android:layout_height="1dp"
+                        android:layout_marginBottom="16dp"
+                        android:layout_marginLeft="16dp"
+                        android:layout_marginTop="16dp"
+                        android:layout_weight="1"
+                        android:background="@color/off_white"
+                        android:visibility="invisible"
+                        tools:visibility="visible"/>
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/keywords"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:textColor="#fff"
+                    android:textSize="22sp"
                     android:visibility="invisible"
+                    tools:text="times square, superhero, long take, new york city, play, broadway, death of superhero, actor"
                     tools:visibility="visible"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:id="@+id/leftSeparatorTwo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="1dp"
+                        android:layout_marginBottom="16dp"
+                        android:layout_marginRight="16dp"
+                        android:layout_marginTop="16dp"
+                        android:layout_weight="1"
+                        android:background="@color/off_white"
+                        android:visibility="invisible"
+                        tools:visibility="visible"/>
+
+                    <TextView
+                        android:id="@+id/overviewHeader"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:fontFamily="sans-serif-light"
+                        android:text="O V E R V I E W"
+                        android:visibility="invisible"
+                        tools:visibility="visible"/>
+
+                    <View
+                        android:id="@+id/rightSeparatorTwo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="1dp"
+                        android:layout_marginBottom="16dp"
+                        android:layout_marginLeft="16dp"
+                        android:layout_marginTop="16dp"
+                        android:layout_weight="1"
+                        android:background="@color/off_white"
+                        android:visibility="invisible"
+                        tools:visibility="visible"/>
+
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/overview"
@@ -167,7 +250,7 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:textColor="#fff"
-                    android:textSize="24sp"
+                    android:textSize="22sp"
                     android:visibility="invisible"
                     tools:text="A story about love, passion, and plenty of explosions, the Robot Man finds his way through time to stop the evil aliens from taking over Russia."
                     tools:visibility="visible"/>

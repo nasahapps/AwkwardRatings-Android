@@ -33,6 +33,8 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.nasahapps.awkwardratings.model.Keyword;
+
 import java.util.List;
 
 /**
@@ -175,19 +177,18 @@ public class Utils {
 
     /**
      * Quickly concat a list of Strings separated by commas
-     * @param strings list of Strings to concat
-     * @return the list of Strings concatenated and separated by commas
+     * @param keywords list of Keyword names to concat
+     * @return the list of Keywords concatenated and separated by commas
      */
-    public static String buildString(List<String> strings) {
-        if (strings == null) return null;
-        if (strings.isEmpty()) return "";
-        if (strings.size() == 1) return strings.get(0);
+    public static String buildString(List<Keyword> keywords) {
+        if (keywords == null || keywords.isEmpty()) return null;
+        if (keywords.size() == 1) return keywords.get(0).getName();
 
         StringBuilder sb = new StringBuilder();
-        for (String s : strings) {
-            sb.append(s + ", ");
+        sb.append(keywords.get(0).getName());
+        for (int i = 1; i < keywords.size(); i++) {
+            sb.append(", " + keywords.get(i).getName());
         }
-        sb.replace(sb.length() - 2, sb.length(), "");
         return sb.toString();
     }
 

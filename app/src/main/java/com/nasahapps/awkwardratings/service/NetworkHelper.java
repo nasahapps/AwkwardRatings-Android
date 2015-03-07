@@ -21,7 +21,7 @@ import retrofit.http.Query;
 
 /**
  * Created by Hakeem on 2/28/15.
- *
+ * <p/>
  * Network helper class for any REST APIs used
  */
 public class NetworkHelper {
@@ -83,7 +83,7 @@ public class NetworkHelper {
     }
 
     public void getMovie(int id) {
-        mMovieDBClient.getMovie(id, mTMDBKey, "videos", new Callback<Movie>() {
+        mMovieDBClient.getMovie(id, mTMDBKey, "videos,keywords", new Callback<Movie>() {
             @Override
             public void success(Movie movie, Response response) {
                 EventBus.getDefault().post(movie);

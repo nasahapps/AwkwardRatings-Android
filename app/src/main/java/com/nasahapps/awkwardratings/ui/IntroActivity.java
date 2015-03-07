@@ -73,16 +73,16 @@ public class IntroActivity extends ActionBarActivity {
 
             // Animate our views in
             fadeAndSlideIn(text1, false, 0);
-            fadeIn(text2, 1000);
-            fadeAndSlideIn(text3, false, 2500);
-            fadeAndSlideIn(text4, true, 4000);
-            fadeAndSlideIn(text5, false, 5500);
-            fadeAndSlideIn(text6, true, 7000);
-            fadeAndSlideIn(text7, false, 8500);
-            fadeAndSlideIn(text8, true, 10000);
-            fadeAndSlideIn(text9, false, 12000);
-            fadeAndSlideIn(text10, true, 13000);
-            fadeAndSlideIn(mStartButton, true, 13500);
+            fadeIn(text2, 500);
+            fadeAndSlideIn(text3, false, 2000);
+            fadeAndSlideIn(text4, true, 2500);
+            fadeAndSlideIn(text5, false, 3000);
+            fadeAndSlideIn(text6, true, 3500);
+            fadeAndSlideIn(text7, false, 4000);
+            fadeAndSlideIn(text8, true, 4500);
+            fadeAndSlideIn(text9, false, 6000);
+            fadeAndSlideIn(text10, true, 6500);
+            fadeAndSlideIn(mStartButton, true, 6750);
 
             return v;
         }

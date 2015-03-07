@@ -2,8 +2,10 @@ package com.nasahapps.awkwardratings.ui;
 
 import android.annotation.TargetApi;
 import android.app.ActivityOptions;
+import android.app.AlertDialog;
 import android.app.SearchManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Point;
@@ -112,6 +114,9 @@ public class MainActivity extends ActionBarActivity {
         private List<Movie> mSearchedMovies;
         private Menu mMenu;
         private String mLastQuery;
+        // List of choices to sort movie results by
+        private String[] mSortChoices = new String[]{"Last updated", "Awkwardness ascending",
+                "Awkwardness descending", "A - Z", "Z - A"};
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -424,6 +429,35 @@ public class MainActivity extends ActionBarActivity {
                     // Open a dialog to give credit to 3rd-party libraries
                     new LicensesDialog.Builder(getActivity()).setNotices(R.raw.notices).build().show();
                     return true;
+                case R.id.sort:
+                    // Open a dialog to figure out how to sort results
+                    final int sortChoice = PreferencesHelper.getInstance(getActivity()).getInt(
+                            PreferencesHelper.KEY_SORT, 0);
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                    builder.setTitle("Sort Movies")
+                            .setSingleChoiceItems(mSortChoices, sortChoice, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    if (which != sortChoice) {
+                                        // Save the new sorting preference
+                                        PreferencesHelper.getInstance(getActivity()).putInt(
+                                                PreferencesHelper.KEY_SORT, which);
+                                        // Clear our list of movies
+                                        mMovies.clear();
+                                        // And re-query movies with the new sorting preference
+                                        getMovies();
+                                    }
+                                    // Dismiss the dialog
+                                    dialog.dismiss();
+                                }
+                            })
+                            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                }
+                            });
+                    builder.create().show();
                 default:
                     return super.onOptionsItemSelected(item);
             }
@@ -435,8 +469,31 @@ public class MainActivity extends ActionBarActivity {
         public void getMovies() {
             // Query our db for the movies
             ParseQuery<ParseObject> query = ParseQuery.getQuery("Movie");
-            // Ordered by most recently updated
-            query.orderByDescending("updatedAt");
+            switch (PreferencesHelper.getInstance(getActivity()).getInt(PreferencesHelper.KEY_SORT, 0)) {
+                case 0:
+                    // Sort by last updated
+                    query.orderByDescending("updatedAt");
+                    break;
+                case 1:
+                    // Sort by awkwardness ascending
+                    query.orderByAscending("awkwardness");
+                    break;
+                case 2:
+                    // Sort by awkwardness descending
+                    query.orderByDescending("awkwardness");
+                    break;
+                case 3:
+                    // Sort alphabetically
+                    query.orderByAscending("title");
+                    break;
+                case 4:
+                    // Sort backwards alphabetically
+                    query.orderByDescending("title");
+                    break;
+                default:
+                    // Sort by last updated
+                    query.orderByDescending("updatedAt");
+            }
             // For pagination
             query.setSkip(mMovies.size());
             // Get 1000 at a time

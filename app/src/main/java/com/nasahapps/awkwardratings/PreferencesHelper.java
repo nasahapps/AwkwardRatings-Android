@@ -21,6 +21,7 @@ public class PreferencesHelper {
     public static final String KEY_RATE_APP_COUNTER = "rate_app_counter";
     public static final String KEY_MOVIE_RATINGS = "movie_ratings";
     public static final String KEY_OPENED_ALREADY = "first_open";
+    public static final String KEY_SORT = "sort";
 
     private static PreferencesHelper sInstance;
     private SharedPreferences mPrefs;

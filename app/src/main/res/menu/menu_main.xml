@@ -10,6 +10,11 @@
         app:actionViewClass="android.support.v7.widget.SearchView"
         app:showAsAction="ifRoom|collapseActionView"/>
     <item
+        android:id="@+id/sort"
+        android:icon="@drawable/ic_sort"
+        android:title="Sort"
+        app:showAsAction="ifRoom"/>
+    <item
         android:id="@+id/github"
         android:title="Show source code"
         app:showAsAction="never"/>

@@ -318,7 +318,7 @@ public class MovieActivity extends ActionBarActivity {
                                 }
                             }
 
-                            long percent = VoteHelper.getVote(parseObject);
+                            int percent = parseObject.getInt("awkwardness");
                             if (percent == -1)
                                 mAwkwardness.setText("NR");
                             else
@@ -344,7 +344,7 @@ public class MovieActivity extends ActionBarActivity {
                                     }
                                     VoteHelper.vote(getActivity(), parseObject, true, mMovieRatings);
                                     // And adjust the middle button's percentage
-                                    long percent = VoteHelper.getVote(parseObject);
+                                    int percent = parseObject.getInt("awkwardness");
                                     if (percent == -1)
                                         mAwkwardness.setText("NR");
                                     else
@@ -370,7 +370,7 @@ public class MovieActivity extends ActionBarActivity {
                                     }
                                     VoteHelper.vote(getActivity(), parseObject, false, mMovieRatings);
                                     // And adjust the middle button's percentage
-                                    long percent = VoteHelper.getVote(parseObject);
+                                    int percent = parseObject.getInt("awkwardness");
                                     if (percent == -1)
                                         mAwkwardness.setText("NR");
                                     else

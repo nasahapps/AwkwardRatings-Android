@@ -1,5 +1,6 @@
 var TMDB_KEY = "Ha! Nice try, you're not getting my API key!";
 var Movie = Parse.Object.extend("Movie");
+var TestMovie = Parse.Object.extend("TestMovie");
 
 Parse.Cloud.job("get_movies", function(request, status) {
 	Parse.Cloud.useMasterKey();
@@ -69,12 +70,21 @@ Parse.Cloud.beforeSave("Movie", function(request, response) {
 						if (request.object.get("awkward_no") < 0) {
 							request.object.set("awkward_no", 0);
 						}
+						// And set the awkwardness
+						var yes = request.object.get("awkward_yes");
+						var no = request.object.get("awkward_no");
+						if (yes == 0 && no == 0) {
+							request.object.set("awkwardness", -1);
+						} else {
+							request.object.set("awkwardness", yes*100 / (yes+no));
+						}
 						response.success();
 					}
 				} else {
 					// Movie doesn't already exist, set votes to 0
 					request.object.set("awkward_yes", 0);
 					request.object.set("awkward_no", 0);
+					request.object.set("awkwardness", -1);
 					response.success();
 				}
 			}, error: function(error) {
@@ -82,6 +92,81 @@ Parse.Cloud.beforeSave("Movie", function(request, response) {
 			}
 		});
 	}
+});
+
+Parse.Cloud.beforeSave("TestMovie", function(request, response) {
+	if (!request.object.get("movie_id")) {
+		response.error("Movie must have a movie_id");
+	} else {
+		var query = new Parse.Query(Movie);
+		query.equalTo("movie_id", request.object.get("movie_id"));
+		query.first({
+			success: function(movie) {
+				if (movie) {
+					// Movie already exists, are we updating the vote?
+					// First check if the new object is brand new not currently existing
+					// If it's brand new, ignore
+					if (request.object.get("awkward_yes") == null && request.object.get("awkward_no") == null) {
+						response.error("This movie already exists in the DB");
+					} else {
+						// Else, let it save
+						// But first make sure voting wouldn't let it go under 0
+						if (request.object.get("awkward_yes") < 0) {
+							request.object.set("awkward_yes", 0);
+						}
+						if (request.object.get("awkward_no") < 0) {
+							request.object.set("awkward_no", 0);
+						}
+						// And set the awkwardness
+						var yes = request.object.get("awkward_yes");
+						var no = request.object.get("awkward_no");
+						if (yes == 0 && no == 0) {
+							request.object.set("awkwardness", -1);
+						} else {
+							request.object.set("awkwardness", yes*100 / (yes+no));
+						}
+						response.success();
+					}
+				} else {
+					// Movie doesn't already exist, set votes to 0
+					request.object.set("awkward_yes", 0);
+					request.object.set("awkward_no", 0);
+					request.object.set("awkwardness", -1);
+					response.success();
+				}
+			}, error: function(error) {
+				response.error("Could not validate uniqueness for this object");
+			}
+		});
+	}
+});
+
+// Quick function to set the awkwardness of each currently-existing movie
+Parse.Cloud.define("set_awkwardness", function(request, response) {
+	Parse.Cloud.useMasterKey();
+	var query = new Parse.Query(Movie);
+	query.limit(1000);
+	query.find().then(function(results) {
+		var promises = [];
+		for (var i = 0; i < results.length; i++) {
+			var yes = results[i].get("awkward_yes");
+			var no = results[i].get("awkward_no");
+			if (yes == 0 && no == 0) {
+				results[i].set("awkwardness", -1);
+			} else {
+				results[i].set("awkwardness", yes*100 / (yes+no));
+			}
+			promises.push(results[i].save());
+		}
+
+		Parse.Promise.when(promises).then(function() {
+			response.success("Success!");
+		}, function(error) {
+			response.error("Error " + error.code + " saving movies: " + error.message);
+		});
+	}, function(error) {
+		response.error("Error " + error.code + " getting movies: " + error.message);
+	});
 });
 
 function getPopular(page) {

@@ -543,7 +543,7 @@ public class MainActivity extends ActionBarActivity {
                 holder.title.setText(movie.getString("title"));
 
                 // Set awkward rating based on votes
-                long percent = VoteHelper.getVote(movie);
+                int percent = movie.getInt("awkwardness");
                 if (percent == -1)
                     holder.rating.setText("No rating");
                 else

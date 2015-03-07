@@ -564,7 +564,8 @@ public class MainActivity extends ActionBarActivity {
                                 @Override
                                 public void onGenerated(Palette p) {
                                     int color = p.getDarkMutedColor(p.getMutedColor(p.getDarkVibrantColor(0xff000000)));
-                                    if (!Utils.isPortrait(getActivity()) || Utils.isTablet(getActivity())) {
+                                    if (getActivity() != null
+                                            && (!Utils.isPortrait(getActivity()) || Utils.isTablet(getActivity()))) {
                                         // Have the alpha be 0.7 in landscape (phones)
                                         // Or 0.7 for tablets in general
                                         // 0.7 alpha is 179/255

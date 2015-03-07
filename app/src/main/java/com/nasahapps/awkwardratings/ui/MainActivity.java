@@ -354,53 +354,55 @@ public class MainActivity extends ActionBarActivity {
             mMenu = menu;
 
             // Get the SearchView and set the searchable config
-            SearchManager searchManager = (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
-            final SearchView searchView = (SearchView) menu.findItem(R.id.searchMenuItem).getActionView();
-            searchView.setSearchableInfo(searchManager.getSearchableInfo(getActivity().getComponentName()));
-            searchView.setIconifiedByDefault(true); // Show as an icon by default
-            searchView.setQueryHint("Search movies"); // For some reason, setting this in xml doesn't work
-            searchView.setQuery(mLastQuery, false); // If user rotated, pre-fill the search bar with
-            // the user's last query
-            // Also side note, when the user presses the "return" key on the keyboard, this doesn't
-            // do a search simply because a search is already being done as they type. Pressing "return"
-            // just hides the keyboard if it's showing
+            if (getActivity() != null) {
+                SearchManager searchManager = (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
+                final SearchView searchView = (SearchView) menu.findItem(R.id.searchMenuItem).getActionView();
+                searchView.setSearchableInfo(searchManager.getSearchableInfo(getActivity().getComponentName()));
+                searchView.setIconifiedByDefault(true); // Show as an icon by default
+                searchView.setQueryHint("Search movies"); // For some reason, setting this in xml doesn't work
+                searchView.setQuery(mLastQuery, false); // If user rotated, pre-fill the search bar with
+                // the user's last query
+                // Also side note, when the user presses the "return" key on the keyboard, this doesn't
+                // do a search simply because a search is already being done as they type. Pressing "return"
+                // just hides the keyboard if it's showing
 
-            MenuItem searchItem = menu.findItem(R.id.searchMenuItem);
-            // This was added because some devices wouldn't get rid of the SearchListView
-            // when the back button was clicked. This fixes that.
-            MenuItemCompat.setOnActionExpandListener(searchItem, new MenuItemCompat.OnActionExpandListener() {
-                @Override
-                public boolean onMenuItemActionExpand(MenuItem menuItem) {
-                    mSearchListView.setVisibility(View.VISIBLE);
-                    return true;
-                }
-
-                @Override
-                public boolean onMenuItemActionCollapse(MenuItem menuItem) {
-                    mSearchListView.setAdapter(null);
-                    mSearchListView.setVisibility(View.GONE);
-                    mSearchedMovies = null;
-                    return true;
-                }
-            });
-            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-                @Override
-                public boolean onQueryTextSubmit(String s) {
-                    return false;
-                }
-
-                @Override
-                public boolean onQueryTextChange(String s) {
-                    if (s.equals("")) {
-                        mSearchListView.setAdapter(null);
-                    } else {
-                        mLastQuery = s;
-                        NetworkHelper.getInstance(getActivity()).searchMovie(s);
+                MenuItem searchItem = menu.findItem(R.id.searchMenuItem);
+                // This was added because some devices wouldn't get rid of the SearchListView
+                // when the back button was clicked. This fixes that.
+                MenuItemCompat.setOnActionExpandListener(searchItem, new MenuItemCompat.OnActionExpandListener() {
+                    @Override
+                    public boolean onMenuItemActionExpand(MenuItem menuItem) {
+                        mSearchListView.setVisibility(View.VISIBLE);
+                        return true;
                     }
 
-                    return true;
-                }
-            });
+                    @Override
+                    public boolean onMenuItemActionCollapse(MenuItem menuItem) {
+                        mSearchListView.setAdapter(null);
+                        mSearchListView.setVisibility(View.GONE);
+                        mSearchedMovies = null;
+                        return true;
+                    }
+                });
+                searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                    @Override
+                    public boolean onQueryTextSubmit(String s) {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean onQueryTextChange(String s) {
+                        if (s.equals("")) {
+                            mSearchListView.setAdapter(null);
+                        } else {
+                            mLastQuery = s;
+                            NetworkHelper.getInstance(getActivity()).searchMovie(s);
+                        }
+
+                        return true;
+                    }
+                });
+            }
 
             super.onCreateOptionsMenu(menu, inflater);
         }

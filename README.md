@@ -1,4 +1,4 @@
-# Awkward Ratings for Android - v. 1.0
+# Awkward Ratings for Android - v. 1.1
 
 [https://play.google.com/store/apps/details?id=com.nasahapps.awkwardratings](https://play.google.com/store/apps/details?id=com.nasahapps.awkwardratings)
 
@@ -8,10 +8,19 @@ The idea for this app was inspired by [this Reddit post](http://redd.it/2xhq9g).
 
 App demonstrates the use of REST APIs via [Retrofit](http://square.github.io/retrofit/), image gathering/caching via [Picasso](http://square.github.io/picasso/), and coloring each list item based on the image using the AppCompat-v7 Palette class.  
 
+<h2>Changelog</h2>
+<ul>
+    <li>1.1</li>
+    <ul>
+        <li>Users can now sort movie results either alphabetically, by awkwardness, or by last updated</li>
+        <li>Keywords now show up on a movie's page to help clarify a movie's potential awkwardness</li>
+    </ul>
+</ul>
+
 <h2>User Features</h2> 
 
 * Vote on whether a movie would be awkward or not to watch with parents if you're young, or if you're of the older parental crowd, vote on which movies would be awkward to watch with kids/teenagers. It could go both ways (that's what she said).  
-* View quick info on a movie such as release date (month and year) and a short overview on the movie's plot.
+* View quick info on a movie such as release date (month and year), keywords, and a short overview on the movie's plot.
 * View that movie's trailer (if available). _Warning: Could be nolstalgic_ 
 * Search for movies
 

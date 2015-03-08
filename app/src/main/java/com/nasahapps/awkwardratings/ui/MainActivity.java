@@ -42,6 +42,7 @@ import android.widget.Toast;
 
 import com.malinskiy.superrecyclerview.OnMoreListener;
 import com.malinskiy.superrecyclerview.SuperRecyclerView;
+import com.nasahapps.awkwardratings.AnalyticsHelper;
 import com.nasahapps.awkwardratings.PreferencesHelper;
 import com.nasahapps.awkwardratings.R;
 import com.nasahapps.awkwardratings.Utils;
@@ -94,6 +95,8 @@ public class MainActivity extends ActionBarActivity {
                     .add(R.id.container, new MainFragment())
                     .commit();
         }
+
+        AnalyticsHelper.getInstance(this).sendScreenViewAnalytics("Main page");
     }
 
     public static class MainFragment extends Fragment {

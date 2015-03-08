@@ -29,6 +29,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.youtube.player.YouTubeStandalonePlayer;
+import com.nasahapps.awkwardratings.AnalyticsHelper;
 import com.nasahapps.awkwardratings.PreferencesHelper;
 import com.nasahapps.awkwardratings.R;
 import com.nasahapps.awkwardratings.Utils;
@@ -73,6 +74,8 @@ public class MovieActivity extends ActionBarActivity {
                     .add(R.id.container, MovieFragment.newInstance(id))
                     .commit();
         }
+
+        AnalyticsHelper.getInstance(this).sendScreenViewAnalytics("Movie page");
     }
 
     @Override
@@ -276,11 +279,13 @@ public class MovieActivity extends ActionBarActivity {
                                 Intent i = YouTubeStandalonePlayer.createVideoIntent(getActivity(), key,
                                         mMovie.getVideos().getResults().get(0).getKey(), 0, true, false);
                                 // YouTube app must be installed, so check for that
-                                if (Utils.hasValidAppToOpen(i, getActivity()))
+                                if (Utils.hasValidAppToOpen(i, getActivity())) {
+                                    AnalyticsHelper.getInstance(getActivity()).sendScreenViewAnalytics("Trailer page");
                                     startActivity(i);
-                                else
+                                } else {
                                     Toast.makeText(getActivity(), "YouTube app not installed", Toast.LENGTH_SHORT)
                                             .show();
+                                }
                             } finally {
                                 s.close();
                             }
@@ -402,7 +407,7 @@ public class MovieActivity extends ActionBarActivity {
                             // Pop the buttons in
                             popIn(mNotAwkwardButton, 0);
                             popIn(mAwkwardness, 100);
-                            if (Utils.isPortrait(getActivity()))
+                            if (getActivity() != null && Utils.isPortrait(getActivity()))
                                 // Only fade in the awkward label if in portrait
                                 fadeIn(mAwkwardLabel, 100);
                             popIn(mAwkwardButton, 200);

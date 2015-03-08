@@ -8,8 +8,8 @@ android {
         applicationId "com.nasahapps.awkwardratings"
         minSdkVersion 15
         targetSdkVersion 21
-        versionCode 8
-        versionName "1.1"
+        versionCode 9
+        versionName "1.1.1"
     }
     buildTypes {
         release {
@@ -25,6 +25,8 @@ dependencies {
     compile 'com.android.support:appcompat-v7:21.0.3'
     // Palette
     compile 'com.android.support:palette-v7:21.0.3'
+    // Google Play Analytics
+    compile 'com.google.android.gms:play-services-base:6.5.87'
     // Parse
     compile 'com.parse.bolts:bolts-android:1.+'
     // Super RecyclerView

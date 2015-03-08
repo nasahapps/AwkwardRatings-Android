@@ -11,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.nasahapps.awkwardratings.AnalyticsHelper;
 import com.nasahapps.awkwardratings.R;
 import com.nasahapps.awkwardratings.service.NetworkHelper;
 import com.squareup.picasso.Callback;
@@ -30,6 +31,8 @@ public class PosterActivity extends ActionBarActivity {
                     .add(R.id.container, PosterFragment.newInstance(url))
                     .commit();
         }
+
+        AnalyticsHelper.getInstance(this).sendScreenViewAnalytics("Poster page");
     }
 
     public static class PosterFragment extends Fragment {

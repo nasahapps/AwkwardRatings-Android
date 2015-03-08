@@ -302,6 +302,7 @@ public class MainActivity extends ActionBarActivity {
             mRefresh.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    mRecyclerView.getEmptyView().setVisibility(View.INVISIBLE);
                     mRecyclerView.getSwipeToRefresh().setRefreshing(true);
                     getMovies();
                 }

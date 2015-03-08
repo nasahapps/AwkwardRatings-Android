@@ -145,6 +145,8 @@ public class MainActivity extends ActionBarActivity {
                     mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
                 } else { // Tablets in a grid of 2 columns
                     mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 2));
+                    // Also have the refresh view be large
+                    mRecyclerView.getSwipeToRefresh().setSize(SwipeRefreshLayout.LARGE);
                 }
             } else {
                 // When in landscape, a horizontal list

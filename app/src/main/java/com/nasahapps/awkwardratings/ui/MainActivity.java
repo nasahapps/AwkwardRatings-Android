@@ -117,6 +117,7 @@ public class MainActivity extends ActionBarActivity {
         // List of choices to sort movie results by
         private String[] mSortChoices = new String[]{"Last updated", "Awkwardness ascending",
                 "Awkwardness descending", "A - Z", "Z - A"};
+        private Button mRefresh;
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -297,6 +298,15 @@ public class MainActivity extends ActionBarActivity {
                 }
             });
 
+            mRefresh = (Button) mRecyclerView.getEmptyView().findViewById(R.id.refresh);
+            mRefresh.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mRecyclerView.getSwipeToRefresh().setRefreshing(true);
+                    getMovies();
+                }
+            });
+
             mRateCounter = PreferencesHelper.getInstance(getActivity())
                     .getInt(PreferencesHelper.KEY_RATE_APP_COUNTER, 0);
             mRateCounter++;
@@ -444,6 +454,9 @@ public class MainActivity extends ActionBarActivity {
                                                 PreferencesHelper.KEY_SORT, which);
                                         // Clear our list of movies
                                         mMovies.clear();
+                                        mRecyclerView.getAdapter().notifyDataSetChanged();
+                                        mRecyclerView.getEmptyView().setVisibility(View.INVISIBLE);
+                                        mRecyclerView.getSwipeToRefresh().setRefreshing(true);
                                         // And re-query movies with the new sorting preference
                                         getMovies();
                                     }
@@ -502,6 +515,7 @@ public class MainActivity extends ActionBarActivity {
                 @Override
                 public void done(List<ParseObject> parseObjects, ParseException e) {
                     mRecyclerView.hideMoreProgress();
+                    mRecyclerView.getSwipeToRefresh().setRefreshing(false);
 
                     if (e == null) {
                         if (mMovies.isEmpty()) {

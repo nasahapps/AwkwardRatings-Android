@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2015 Nasah Apps
+ */
+
 package com.nasahapps.awkwardratings.ui;
 
 import android.annotation.TargetApi;
@@ -73,7 +77,6 @@ import jp.wasabeef.recyclerview.animators.adapters.AlphaInAnimationAdapter;
 import jp.wasabeef.recyclerview.animators.adapters.ScaleInAnimationAdapter;
 import jp.wasabeef.recyclerview.animators.adapters.SlideInBottomAnimationAdapter;
 import retrofit.RetrofitError;
-
 
 public class MainActivity extends ActionBarActivity {
 
@@ -460,7 +463,8 @@ public class MainActivity extends ActionBarActivity {
                                                 PreferencesHelper.KEY_SORT, which);
                                         // Clear our list of movies
                                         mMovies.clear();
-                                        mRecyclerView.getAdapter().notifyDataSetChanged();
+                                        if (mRecyclerView.getAdapter() != null)
+                                            mRecyclerView.getAdapter().notifyDataSetChanged();
                                         mRecyclerView.getEmptyView().setVisibility(View.INVISIBLE);
                                         mRecyclerView.getSwipeToRefresh().setRefreshing(true);
                                         // And re-query movies with the new sorting preference
@@ -639,22 +643,24 @@ public class MainActivity extends ActionBarActivity {
                     Picasso.with(getActivity()).load(uri).into(holder.poster, new Callback() {
                         @Override
                         public void onSuccess() {
-                            Palette.generateAsync(Utils.getImageViewBitmap(iv), new Palette.PaletteAsyncListener() {
-                                @Override
-                                public void onGenerated(Palette p) {
-                                    int color = p.getDarkMutedColor(p.getMutedColor(p.getDarkVibrantColor(0xff000000)));
-                                    if (getActivity() != null
-                                            && (!Utils.isPortrait(getActivity()) || Utils.isTablet(getActivity()))) {
-                                        // Have the alpha be 0.7 in landscape (phones)
-                                        // Or 0.7 for tablets in general
-                                        // 0.7 alpha is 179/255
-                                        int newColor = Color.argb(179, Color.red(color), Color.green(color), Color.blue(color));
-                                        Utils.animateToColor(background, newColor);
-                                    } else {
-                                        Utils.animateToColor(background, color);
+                            if (iv != null) {
+                                Palette.generateAsync(Utils.getImageViewBitmap(iv), new Palette.PaletteAsyncListener() {
+                                    @Override
+                                    public void onGenerated(Palette p) {
+                                        int color = p.getDarkMutedColor(p.getMutedColor(p.getDarkVibrantColor(0xff000000)));
+                                        if (getActivity() != null
+                                                && (!Utils.isPortrait(getActivity()) || Utils.isTablet(getActivity()))) {
+                                            // Have the alpha be 0.7 in landscape (phones)
+                                            // Or 0.7 for tablets in general
+                                            // 0.7 alpha is 179/255
+                                            int newColor = Color.argb(179, Color.red(color), Color.green(color), Color.blue(color));
+                                            Utils.animateToColor(background, newColor);
+                                        } else {
+                                            Utils.animateToColor(background, color);
+                                        }
                                     }
-                                }
-                            });
+                                });
+                            }
                         }
 
                         @Override
@@ -778,13 +784,15 @@ public class MainActivity extends ActionBarActivity {
                 Picasso.with(getContext()).load(uri).into(poster, new Callback() {
                     @Override
                     public void onSuccess() {
-                        Palette.generateAsync(Utils.getImageViewBitmap(poster), new Palette.PaletteAsyncListener() {
-                            @Override
-                            public void onGenerated(Palette p) {
-                                int color = p.getDarkMutedColor(p.getMutedColor(p.getDarkVibrantColor(0xff000000)));
-                                Utils.animateToColor(background, color);
-                            }
-                        });
+                        if (poster != null) {
+                            Palette.generateAsync(Utils.getImageViewBitmap(poster), new Palette.PaletteAsyncListener() {
+                                @Override
+                                public void onGenerated(Palette p) {
+                                    int color = p.getDarkMutedColor(p.getMutedColor(p.getDarkVibrantColor(0xff000000)));
+                                    Utils.animateToColor(background, color);
+                                }
+                            });
+                        }
                     }
 
                     @Override

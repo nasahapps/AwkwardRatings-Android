@@ -22,9 +22,9 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     // AppCompat v7
-    compile 'com.android.support:appcompat-v7:21.0.3'
+    compile 'com.android.support:appcompat-v7:22.0.0'
     // Palette
-    compile 'com.android.support:palette-v7:21.0.3'
+    compile 'com.android.support:palette-v7:22.0.0'
     // Google Play Analytics
     compile 'com.google.android.gms:play-services-base:6.5.87'
     // Parse
